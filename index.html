@@ -79,6 +79,16 @@
   .logo{font-size:clamp(30px,8vw,54px)}
   .overlay h1{font-family:'Oswald',sans-serif;font-weight:700;font-size:clamp(38px,9vw,84px);
     letter-spacing:.04em;margin:18px 0 6px;text-transform:uppercase}
+  .overlay h1.runner{font-weight:500;font-style:italic;text-transform:none;
+    font-size:clamp(30px,7vw,58px);letter-spacing:.02em;margin:16px 0 4px}
+  #menuScores{margin-top:12px;min-width:min(320px,78vw);font-size:13px}
+  #menuScores .srow{display:flex;justify-content:space-between;gap:12px;padding:3px 10px;
+    border-radius:8px;opacity:.85}
+  #menuScores .srow:first-child{color:var(--lime);opacity:1;font-weight:600}
+  #menuScores .sname{font-weight:600;text-transform:uppercase;letter-spacing:.04em;
+    max-width:9em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .controls.simple{display:flex;flex-direction:column;gap:7px;line-height:1.4;opacity:.8;font-size:14px}
+  .controls.simple .ic{display:inline-block;width:1.7em}
   .overlay p.tag{opacity:.8;font-size:clamp(14px,3vw,17px);max-width:520px;line-height:1.5}
   .btn{pointer-events:auto;cursor:pointer;border:none;margin-top:28px;font-size:clamp(17px,3.5vw,22px)}
   .btn:active{transform:skewX(-8deg) scale(.96)}
@@ -151,20 +161,18 @@
 
 <div class="overlay" id="menu">
   <img class="logoimg" id="menuLogo" alt="GETKONG">
-  <h1>Kong&nbsp;Run</h1>
-  <p class="tag">Du. Ein Rad. Eine Stadt voller Leute, die im Weg stehen.
-    Ab auf den Bordstein, Brokkoli ins Haus, weiter geht's. Kein Ding.</p>
+  <h1 class="runner">Getkong Runner</h1>
+  <p class="tag">Ding Dong! Radle mit Vollspeed durch die Stadt, verteile Brokkoli
+    und knack den Highscore für den Hauptgewinn.</p>
   <div class="best" id="bestLine"></div>
-  <input id="nameInput" maxlength="14" placeholder="Dein Name (Pflicht)" autocomplete="off" spellcheck="false">
-  <button class="btn pill" id="startBtn">Los halt.</button>
-  <div class="controls">
-    <b>&larr;&nbsp;&rarr;</b> lenken (stufenlos) &nbsp;·&nbsp; <b>&uarr;</b> Tempo &nbsp;·&nbsp; <b>&darr;</b> bremsen<br>
-    <b>Leertaste</b> = Hüpfer &nbsp;·&nbsp; auf dem <b>Bordstein</b> = Brokkoli-Wurf + Mega-Sprung<br>
-    <b>2× Leertaste</b> in der Luft = 360 &nbsp;·&nbsp; Touch: ziehen = lenken, tippen = springen<br>
-    Brokkoli-Coins sammeln = XP, 10 Level, jedes Level ein besserer Rider<br>
-    3 Lieferungen in Serie = Kanone: <b>Cmd</b> (oder 2-Finger-Tap) schießt Brokkoli<br>
-    Coins + Lieferungen laden den <b>Turbo</b> — voll? <b>Shift</b>: je Level ein Skill<br>
-    (Turbo &rarr; Super Jump &rarr; Super Turbo &rarr; Unbesiegbar &rarr; KONG MODE)
+  <div id="menuScores"></div>
+  <input id="nameInput" maxlength="14" placeholder="Dein Name" autocomplete="off" spellcheck="false">
+  <button class="btn pill" id="startBtn">Ding Dong</button>
+  <div class="controls simple">
+    <div><span class="ic">&#128692;</span> Pfeiltasten: lenken, Gas geben, bremsen</div>
+    <div><span class="ic">&#129382;</span> Grüner Bordstein + Leertaste: Brokkoli liefern</div>
+    <div><span class="ic">&#11088;</span> Coins sammeln: Level aufsteigen, Turbo laden</div>
+    <div><span class="ic">&#9889;</span> Shift: Turbo-Skill &nbsp;·&nbsp; 3 Lieferungen: Kanone (Cmd)</div>
   </div>
   <div class="legal">Fiktives Spiel. Wirf zuhause bitte kein Gemüse in fremde Fenster.</div>
 </div>
@@ -536,7 +544,7 @@ function applyOverlayPattern(){
     o.style.backgroundPosition = 'center, center';
   });
   // Logos: Menü = Lime-Akzent-Badge, Game-Over + HUD = dunkles Badge
-  document.getElementById('menuLogo').src = makeLogoURL('#c2e67e', '#20351b');
+  document.getElementById('menuLogo').src = makeLogoURL('#24401f', '#c2e67e'); // Original: dunkles Badge, Lime-Type
   document.getElementById('overLogo').src = makeLogoURL('#24401f', '#c2e67e');
   document.getElementById('hudlogo').src  = makeLogoURL('#24401f', '#c2e67e');
 }
@@ -855,7 +863,10 @@ function updateStreaks(dt){
 let hsTargets = [], hsIdx = 0;
 function initRecordTracker(){
   const seen = {};
-  hsTargets = loadScores().map(s=>s.d).filter(d=>{ if(seen[d]) return false; seen[d]=1; return d > 0; }).sort((a,b)=>a-b);
+  const dists = (globalTop && globalTop.length)
+    ? globalTop.map(function(s){ return s.dist; })
+    : loadScores().map(function(s){ return s.d; });
+  hsTargets = dists.filter(d=>{ if(seen[d]) return false; seen[d]=1; return d > 0; }).sort((a,b)=>a-b);
   hsIdx = 0;
   el('next').style.display = hsTargets.length ? 'block' : 'none';
 }
@@ -1646,6 +1657,54 @@ const QUIPS = [
 ];
 const OVER_TITLES = ['War knapp.', 'Hm.', 'Okay. Nochmal.', 'Autsch.'];
 
+// ---------- Globales Leaderboard (Supabase) ----------
+const SB_URL = 'https://iejuuattiqyymcbprxmu.supabase.co';
+const SB_KEY = 'sb_publishable_CGkLV2Y_A9cctjrhBckeEA_xRNfdWRU';
+var globalTop = null; // null = noch nicht geladen / offline
+function sbFetchTop(cb){
+  try{
+    fetch(SB_URL + '/rest/v1/getkong_scores?select=name,dist,deliveries,level&order=dist.desc&limit=10', {
+      headers: { apikey: SB_KEY }
+    }).then(function(r){ return r.ok ? r.json() : Promise.reject(r.status); })
+      .then(function(list){ globalTop = list; if(cb) cb(list); })
+      .catch(function(){ if(cb) cb(null); });
+  }catch(e){ if(cb) cb(null); }
+}
+function sbSubmit(cb){
+  try{
+    fetch(SB_URL + '/rest/v1/getkong_scores', {
+      method: 'POST',
+      headers: { apikey: SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({
+        name: (S.playerName || '—').substring(0, 14),
+        dist: Math.floor(S.dist),
+        deliveries: S.deliveries,
+        level: S.level
+      })
+    }).then(function(){ if(cb) cb(true); }).catch(function(){ if(cb) cb(false); });
+  }catch(e){ if(cb) cb(false); }
+}
+function renderMenuScores(list){
+  if(!list || !list.length){ el('menuScores').innerHTML = ''; return; }
+  el('menuScores').innerHTML = list.slice(0, 5).map(function(s, i){
+    const nm = (s.name || '—').replace(/</g, '&lt;');
+    return '<div class="srow"><span>' + (i+1) + '.</span>' +
+      '<span class="sname">' + nm + '</span>' +
+      '<span>' + s.dist.toLocaleString('de-DE') + ' m</span></div>';
+  }).join('');
+}
+function renderGlobal(list, ownDist){
+  const rows = list.slice(0, 10).map(function(s, i){
+    const nm = (s.name || '—').replace(/</g, '&lt;');
+    const isOwn = ownDist !== undefined && s.dist === ownDist && s.name === (S.playerName || '—');
+    return '<div class="srow' + (isOwn ? ' new' : '') + '"><span>' + (i+1) + '.</span>' +
+      '<span class="sname">' + nm + '</span>' +
+      '<span>' + s.dist.toLocaleString('de-DE') + ' m</span>' +
+      '<span>' + s.deliveries + ' Lief.</span></div>';
+  }).join('');
+  el('scores').innerHTML = '<div class="stitle">Globale Top 10</div>' + rows;
+}
+
 // ---------- Highscores ----------
 function loadScores(){
   try{ return JSON.parse(localStorage.getItem('getkong-scores') || '[]'); }catch(e){ return []; }
@@ -1671,6 +1730,11 @@ function renderScores(top, entry){
   el('scores').innerHTML = '<div class="stitle">Bestenliste</div>' + rows;
 }
 function updateBestLine(){
+  if(globalTop && globalTop.length){
+    el('bestLine').textContent = 'Weltrekord: ' + globalTop[0].dist.toLocaleString('de-DE') + ' m · ' +
+      (globalTop[0].name || '—').toUpperCase();
+    return;
+  }
   const top = loadScores();
   el('bestLine').textContent = top.length
     ? 'Rekord: ' + top[0].d.toLocaleString('de-DE') + ' m' +
@@ -1730,6 +1794,7 @@ function startGame(){
   if(audio().state === 'suspended') audio().resume();
   startMusic(); startAmbience(); setMusicVol(0.5);
   initRecordTracker();
+  sbFetchTop(function(list){ if(list && S.mode === 'play') initRecordTracker(); });
 }
 function gameOver(){
   S.mode = 'over';
@@ -1744,7 +1809,14 @@ function gameOver(){
   ui.overTitle.textContent = OVER_TITLES[(Math.random()*OVER_TITLES.length)|0];
   ui.overQuip.textContent = QUIPS[(Math.random()*QUIPS.length)|0];
   const res = saveScore(S.dist, S.deliveries);
-  renderScores(res.top, res.entry);
+  renderScores(res.top, res.entry); // lokal sofort, global gleich drüber
+  const ownDist = Math.floor(S.dist);
+  sbSubmit(function(){
+    sbFetchTop(function(list){
+      if(list){ renderMenuScores(list); }
+      if(list && S.mode === 'over'){ renderGlobal(list, ownDist); updateBestLine(); }
+    });
+  });
   updateBestLine();
   setMusicVol(0.22);
   ui.over.style.display = 'flex';
@@ -2394,6 +2466,7 @@ function loop(){
 }
 manageCurbs();
 updateBestLine();
+sbFetchTop(function(list){ updateBestLine(); renderMenuScores(list); });
 applyOverlayPattern();
 el('nameInput').value = localStorage.getItem('getkong-name') || '';
 loop();
