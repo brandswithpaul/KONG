@@ -852,7 +852,7 @@ const keys = {};
 
 // ---------- Three basics ----------
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xb7cca7); // Salbei — dieselbe Palette wie die Kuppel
+scene.background = new THREE.Color(0xa9bd9a); // Salbei — dieselbe Palette wie die Kuppel
 scene.fog = new THREE.Fog(0xb9c3a2, 210, 380);  // Sandton des Horizonts. Der Dunst setzt
 // erst bei 210 m ein: vorher lag er ab 80 m über der halben Straße und hat die Häuser
 // aufgehellt, statt nur das Ende der Flucht weichzuzeichnen.
@@ -908,15 +908,16 @@ const skyCanvas = document.createElement('canvas');
 skyCanvas.width = 2; skyCanvas.height = 256;
 (function(){
   const ctx = skyCanvas.getContext('2d');
-  // Vier Stopps aus der Markenpalette: oben ein gedecktes Grün, das über Salbei
-  // und Sand zum cremefarbenen Horizont aufhellt. Die Reihenfolge ist bewusst
-  // von dunkel nach hell — so liegt der hellste Wert dort, wo die Stadt endet,
-  // und die Häuser lösen sich darin auf.
+  // Der Horizont stand auf Creme (#f2ecda) — fast Weiß. Genau dort endet die
+  // Straße, also lag am Fluchtpunkt ein heller Fleck, der den Blick aus dem
+  // Bild gezogen hat. Der Verlauf hellt jetzt nur noch bis Salbei auf und
+  // trifft unten die Nebelfarbe (#b9c3a2), sodass Straße und Himmel dort
+  // ineinander übergehen statt zu leuchten.
   const gr = ctx.createLinearGradient(0, 0, 0, 256);
   gr.addColorStop(0.0,  '#7da780');   // Zenit
-  gr.addColorStop(0.42, '#b7cca7');   // Salbei
-  gr.addColorStop(0.74, '#e4e0c1');   // Sand
-  gr.addColorStop(1.0,  '#f2ecda');   // Horizont
+  gr.addColorStop(0.45, '#9cb996');   // Salbei, abgedunkelt
+  gr.addColorStop(0.80, '#b0c09e');   // Übergang
+  gr.addColorStop(1.0,  '#b9c3a2');   // Horizont = Nebelfarbe
   ctx.fillStyle = gr; ctx.fillRect(0, 0, 2, 256);
 })();
 const skyTex = new THREE.CanvasTexture(skyCanvas);
