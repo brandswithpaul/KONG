@@ -883,14 +883,14 @@ sun.castShadow = true;
 // Kante dann von Bild zu Bild. Jetzt 4096 Pixel auf 76 m (1,9 cm je Texel) und
 // ein weicher Rand über shadow.radius.
 sun.shadow.mapSize.set(4096, 4096);
-// Der Kasten deckt jetzt 220 statt 76 m ab. Vorher endete der Schattenwurf
-// 38 m vor dem Fahrer: davor lag die Straße im Schatten der Häuser, dahinter
-// wurde sie voll beleuchtet — als heller Keil, der mitfuhr. Das war das
-// "Licht auf der Straße". 4096 Pixel auf 220 m sind 5,4 cm je Texel; die
-// Kanten werden weicher, dafür ist der Bruch weg.
-sun.shadow.camera.left = -110; sun.shadow.camera.right = 110;
-sun.shadow.camera.top = 110; sun.shadow.camera.bottom = -110;
-sun.shadow.camera.near = 10; sun.shadow.camera.far = 340;
+// ZURUECK auf 76 m. Der Versuch mit 220 m hat beides verschlimmert: 4096 Pixel
+// auf 220 m sind nur 5,4 cm je Texel, und bei streifendem Blick auf die Fahrbahn
+// entstehen daraus helle und dunkle Baender (Schattenakne). Dazu rendert der
+// Schattenpass die dreifache Flaeche voller Haeuser — das war das staerkere
+// Stocken. Die Kante des Schattenwurfs versteckt jetzt die Fern-Abdunklung.
+sun.shadow.camera.left = -38; sun.shadow.camera.right = 38;
+sun.shadow.camera.top = 38; sun.shadow.camera.bottom = -38;
+sun.shadow.camera.near = 10; sun.shadow.camera.far = 200;
 // normalBias schiebt entlang der Flächennormale statt entlang des Lichtstrahls —
 // genau das, was streifende Winkel brauchen. Der alte konstante Bias erzeugte
 // dort das Muster aus hellen und dunklen Bändern.
@@ -6452,7 +6452,7 @@ function update(dt){
   wolkenUpdate();
 
   // --- Sonne + Himmel folgen dem Spieler ---
-  // Der Kasten deckt 220 m ab — er wird nach vorn geschoben, weil dort gefahren
+  // Der Kasten deckt 76 m ab — er wird nach vorn geschoben, weil dort gefahren
   // wird. Hinter dem Fahrer braucht niemand Schatten.
   // Kasten leicht nach vorn: dort wird gefahren. Weit genug hinter dem Fahrer,
   // dass sein eigener Schatten sicher drin liegt.
@@ -6508,8 +6508,40 @@ function update(dt){
 }
 
 // ---------- Loop ----------
+// Auflösung nachregeln. Auf einem Retina-Schirm rendert das Spiel mit
+// devicePixelRatio 2, also vierfacher Pixelzahl — auf schwächerer Hardware
+// stockt es damit. Statt fest zu deckeln (und überall unscharf zu sein) misst
+// diese Regelung die Bildzeit und geht nur dann runter, wenn es klemmt.
+const PR_STUFEN = [2, 1.6, 1.3, 1.0];
+var prIdx = 0, prZeiten = [], prLetzt = 0;
+function aufloesungRegeln(){
+  const jetzt = performance.now();
+  if(prLetzt){
+    prZeiten.push(jetzt - prLetzt);
+    if(prZeiten.length >= 90){
+      const sortiert = prZeiten.slice().sort(function(a, b){ return a - b; });
+      const median = sortiert[45];
+      prZeiten.length = 0;
+      const max = Math.min(devicePixelRatio, 2);
+      // über 22 ms (unter 45 fps) eine Stufe runter, unter 11 ms wieder hoch
+      if(median > 22 && prIdx < PR_STUFEN.length - 1) prIdx++;
+      else if(median < 11 && prIdx > 0) prIdx--;
+      else { prLetzt = jetzt; return; }
+      const ziel = Math.min(max, PR_STUFEN[prIdx]);
+      if(Math.abs(renderer.getPixelRatio() - ziel) > 0.01){
+        renderer.setPixelRatio(ziel);
+        const puffer = renderer.getDrawingBufferSize(new THREE.Vector2());
+        // composer.setSize zieht seine eigenen Ziele mit — das HDR-Ziel haengt
+        // als Lesepuffer darin und muss nicht getrennt angefasst werden.
+        if(typeof composer !== 'undefined' && composer) composer.setSize(puffer.x, puffer.y);
+      }
+    }
+  }
+  prLetzt = jetzt;
+}
 function loop(){
   requestAnimationFrame(loop);
+  aufloesungRegeln();
   let dt = Math.min(clock.getDelta(), 0.05);
   // Standbild-Moment: die Welt hält kurz an, das Bild läuft weiter
   if(hitPause > 0){ hitPause -= 0.016; dt = 0; }
@@ -6609,9 +6641,12 @@ try{
 // Erst hier, ganz am Ende: `for(const k in M) M[k] = toonifyDeep(M[k])` tauscht
 // die Materialien gegen neue Objekte aus. Wer den Hook vorher setzt, haengt ihn
 // an ein Material, das niemand mehr benutzt.
-fernAbdunkeln(M.asphalt,  70, 190, 0.42);
-fernAbdunkeln(M.sidewalk, 70, 190, 0.48);
-fernAbdunkeln(M.dash,     70, 190, 0.40);
+// Beginnt bei 30 m, also noch innerhalb des Schattenkastens: die Kante bei
+// 38 m faellt damit in eine Zone, die ohnehin schon abdunkelt, und faellt
+// nicht mehr auf. Voll ab 130 m.
+fernAbdunkeln(M.asphalt,  30, 130, 0.40);
+fernAbdunkeln(M.sidewalk, 30, 130, 0.46);
+fernAbdunkeln(M.dash,     30, 130, 0.38);
 loop();
 </script>
 </body>
