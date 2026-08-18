@@ -1,0 +1,446 @@
+{
+  "hinweis": "Erzeugt von tools/assets-index.mjs. Gemessene Felder werden bei jedem Lauf neu geschrieben, die Handfelder (rolle, zielhoeheMeter, frontZeigtNach, hinweis) bleiben erhalten.",
+  "stand": "2026-08-15",
+  "modelle": {
+    "getkong-bike2.glb": {
+      "groesseKB": 1466,
+      "geriggt": false,
+      "masseInDatei": {
+        "breite": 1.902,
+        "hoehe": 1.131,
+        "tiefe": 0.618,
+        "minY": -0.566,
+        "laengsachse": "x"
+      },
+      "knotenSkalierung": [],
+      "bones": [],
+      "animationen": [],
+      "rolle": "bike",
+      "zielhoeheMeter": null,
+      "frontZeigtNach": "+z",
+      "hinweis": "Auf Länge normieren, nicht auf Höhe: 1,75 m. Rahmen OHNE Laufräder, die kommen aus getkong-wheel2.glb. Korb sitzt vorn, Sattel bei etwa 0,65 m."
+    },
+    "getkong-car1.glb": {
+      "groesseKB": 1357,
+      "geriggt": false,
+      "masseInDatei": {
+        "breite": 1.898,
+        "hoehe": 0.777,
+        "tiefe": 1.001,
+        "minY": -0.391,
+        "laengsachse": "x"
+      },
+      "knotenSkalierung": [],
+      "bones": [],
+      "animationen": [],
+      "rolle": "car",
+      "zielhoeheMeter": 1.5,
+      "frontZeigtNach": "-z",
+      "hinweis": "Hitbox im Spiel: halbe Breite 1,15 · halbe Länge 2,4 · Dachhöhe 1,5."
+    },
+    "getkong-car2.glb": {
+      "groesseKB": 1451,
+      "geriggt": false,
+      "masseInDatei": {
+        "breite": 1.899,
+        "hoehe": 0.715,
+        "tiefe": 0.805,
+        "minY": -0.358,
+        "laengsachse": "x"
+      },
+      "knotenSkalierung": [],
+      "bones": [],
+      "animationen": [],
+      "rolle": "car",
+      "zielhoeheMeter": 1.5,
+      "frontZeigtNach": "-z",
+      "hinweis": "Hitbox wie car1."
+    },
+    "getkong-coin.glb": {
+      "groesseKB": 946,
+      "geriggt": false,
+      "masseInDatei": {
+        "breite": 1.899,
+        "hoehe": 1.899,
+        "tiefe": 0.93,
+        "minY": -0.951,
+        "laengsachse": "x"
+      },
+      "knotenSkalierung": [],
+      "bones": [],
+      "animationen": [],
+      "rolle": "pickup",
+      "zielhoeheMeter": 0.95,
+      "frontZeigtNach": "+z",
+      "hinweis": "Brokkoli-Münze. Schwebt bei y=0,95 und dreht sich um die Y-Achse."
+    },
+    "getkong-rider.glb": {
+      "groesseKB": 2006,
+      "geriggt": false,
+      "masseInDatei": {
+        "breite": 0.767,
+        "hoehe": 1.896,
+        "tiefe": 1.778,
+        "minY": -0.948,
+        "laengsachse": "z"
+      },
+      "knotenSkalierung": [],
+      "bones": [],
+      "animationen": [],
+      "rolle": "rider-alt",
+      "zielhoeheMeter": 1.95,
+      "frontZeigtNach": "-z",
+      "hinweis": "Altes Modell, enthält Rad UND Fahrer in einem Stück, starr. Als Rückfallebene behalten, falls Rider V2 Probleme macht. Braucht rotation.y += PI."
+    },
+    "getkong-rider2.glb": {
+      "groesseKB": 1336,
+      "geriggt": true,
+      "masseInDatei": {
+        "breite": 1.7,
+        "hoehe": 1.695,
+        "tiefe": 0.341,
+        "minY": 0,
+        "laengsachse": "x"
+      },
+      "knotenSkalierung": [
+        "0.01,0.01,0.01"
+      ],
+      "bones": [
+        "Hips",
+        "LeftUpLeg",
+        "LeftLeg",
+        "LeftFoot",
+        "LeftToeBase",
+        "RightUpLeg",
+        "RightLeg",
+        "RightFoot",
+        "RightToeBase",
+        "Spine02",
+        "Spine01",
+        "Spine",
+        "LeftShoulder",
+        "LeftArm",
+        "LeftForeArm",
+        "LeftHand",
+        "RightShoulder",
+        "RightArm",
+        "RightForeArm",
+        "RightHand",
+        "neck",
+        "Head",
+        "head_end",
+        "headfront"
+      ],
+      "animationen": [
+        {
+          "name": "Armature|clip0|baselayer",
+          "sekunden": 0.03
+        }
+      ],
+      "rolle": "rider",
+      "zielhoeheMeter": 1.48,
+      "frontZeigtNach": "+z",
+      "hinweis": "Skelett auf 1% skaliert — Box3 meldet 0,02 statt 1,7. NUR Geometriemaße nutzen. Material braucht skinning=true, sonst rendert die Bind-Pose. Keine Outline: die Kopie bliebe in T-Pose stehen. Arme senken über X, nicht Z. Sitzt bei y=0,30."
+    },
+    "getkong-van.glb": {
+      "groesseKB": 1213,
+      "geriggt": false,
+      "masseInDatei": {
+        "breite": 1.898,
+        "hoehe": 0.855,
+        "tiefe": 0.77,
+        "minY": -0.428,
+        "laengsachse": "x"
+      },
+      "knotenSkalierung": [],
+      "bones": [],
+      "animationen": [],
+      "rolle": "van",
+      "zielhoeheMeter": 2.2,
+      "frontZeigtNach": "-z",
+      "hinweis": "Breiter und länger als PKW: Hitbox 1,35 / 2,9 · Dachhöhe 1,95."
+    },
+    "getkong-wheel2.glb": {
+      "groesseKB": 1068,
+      "geriggt": false,
+      "masseInDatei": {
+        "breite": 1.903,
+        "hoehe": 1.902,
+        "tiefe": 0.207,
+        "minY": -0.951,
+        "laengsachse": "x"
+      },
+      "knotenSkalierung": [],
+      "bones": [],
+      "animationen": [],
+      "rolle": "wheel",
+      "zielhoeheMeter": 0.66,
+      "frontZeigtNach": "+z",
+      "hinweis": "Einzelnes Laufrad, zweimal instanziert bei z=-0,58 und z=+0,58, Nabe auf y=0,33. Auf Durchmesser skalieren, Nabe vor dem Platzieren in den Ursprung schieben."
+    },
+    "person-Crossroads_Horizon.glb": {
+      "groesseKB": 1219,
+      "geriggt": true,
+      "masseInDatei": {
+        "breite": 1.7,
+        "hoehe": 1.569,
+        "tiefe": 0.344,
+        "minY": 0,
+        "laengsachse": "x"
+      },
+      "knotenSkalierung": [
+        "0.01,0.01,0.01"
+      ],
+      "bones": [
+        "Hips",
+        "LeftUpLeg",
+        "LeftLeg",
+        "LeftFoot",
+        "LeftToeBase",
+        "RightUpLeg",
+        "RightLeg",
+        "RightFoot",
+        "RightToeBase",
+        "Spine02",
+        "Spine01",
+        "Spine",
+        "LeftShoulder",
+        "LeftArm",
+        "LeftForeArm",
+        "LeftHand",
+        "RightShoulder",
+        "RightArm",
+        "RightForeArm",
+        "RightHand",
+        "neck",
+        "Head",
+        "head_end",
+        "headfront"
+      ],
+      "animationen": [
+        {
+          "name": "Armature|clip0|baselayer",
+          "sekunden": 0.03
+        }
+      ],
+      "rolle": "person",
+      "zielhoeheMeter": 1.7,
+      "frontZeigtNach": "+z",
+      "hinweis": "Fußgänger. Gleiches 24-Bone-Skelett wie der Rider — dieselbe Pose-Funktion funktioniert. Kommt in T-Pose: Arme über X um ca. 1,32 senken. Material braucht skinning=true, keine Outline."
+    },
+    "person-Crossroads_of_Resolve.glb": {
+      "groesseKB": 1432,
+      "geriggt": true,
+      "masseInDatei": {
+        "breite": 1.7,
+        "hoehe": 1.638,
+        "tiefe": 0.325,
+        "minY": 0,
+        "laengsachse": "x"
+      },
+      "knotenSkalierung": [
+        "0.01,0.01,0.01"
+      ],
+      "bones": [
+        "Hips",
+        "LeftUpLeg",
+        "LeftLeg",
+        "LeftFoot",
+        "LeftToeBase",
+        "RightUpLeg",
+        "RightLeg",
+        "RightFoot",
+        "RightToeBase",
+        "Spine02",
+        "Spine01",
+        "Spine",
+        "LeftShoulder",
+        "LeftArm",
+        "LeftForeArm",
+        "LeftHand",
+        "RightShoulder",
+        "RightArm",
+        "RightForeArm",
+        "RightHand",
+        "neck",
+        "Head",
+        "head_end",
+        "headfront"
+      ],
+      "animationen": [
+        {
+          "name": "Armature|clip0|baselayer",
+          "sekunden": 0.03
+        }
+      ],
+      "rolle": "person",
+      "zielhoeheMeter": 1.7,
+      "frontZeigtNach": "+z",
+      "hinweis": "Fußgänger. Gleiches 24-Bone-Skelett wie der Rider — dieselbe Pose-Funktion funktioniert. Kommt in T-Pose: Arme über X um ca. 1,32 senken. Material braucht skinning=true, keine Outline."
+    },
+    "person-Horizon_Keeper.glb": {
+      "groesseKB": 1230,
+      "geriggt": true,
+      "masseInDatei": {
+        "breite": 1.7,
+        "hoehe": 1.526,
+        "tiefe": 0.322,
+        "minY": 0,
+        "laengsachse": "x"
+      },
+      "knotenSkalierung": [
+        "0.01,0.01,0.01"
+      ],
+      "bones": [
+        "Hips",
+        "LeftUpLeg",
+        "LeftLeg",
+        "LeftFoot",
+        "LeftToeBase",
+        "RightUpLeg",
+        "RightLeg",
+        "RightFoot",
+        "RightToeBase",
+        "Spine02",
+        "Spine01",
+        "Spine",
+        "LeftShoulder",
+        "LeftArm",
+        "LeftForeArm",
+        "LeftHand",
+        "RightShoulder",
+        "RightArm",
+        "RightForeArm",
+        "RightHand",
+        "neck",
+        "Head",
+        "head_end",
+        "headfront"
+      ],
+      "animationen": [
+        {
+          "name": "Armature|clip0|baselayer",
+          "sekunden": 0.03
+        }
+      ],
+      "rolle": "person",
+      "zielhoeheMeter": 1.7,
+      "frontZeigtNach": "+z",
+      "hinweis": "Fußgänger. Gleiches 24-Bone-Skelett wie der Rider — dieselbe Pose-Funktion funktioniert. Kommt in T-Pose: Arme über X um ca. 1,32 senken. Material braucht skinning=true, keine Outline."
+    },
+    "person-Open_Arms_on_Empty_As.glb": {
+      "groesseKB": 1365,
+      "geriggt": true,
+      "masseInDatei": {
+        "breite": 1.665,
+        "hoehe": 1.7,
+        "tiefe": 0.348,
+        "minY": 0,
+        "laengsachse": "x"
+      },
+      "knotenSkalierung": [
+        "0.01,0.01,0.01"
+      ],
+      "bones": [
+        "Hips",
+        "LeftUpLeg",
+        "LeftLeg",
+        "LeftFoot",
+        "LeftToeBase",
+        "RightUpLeg",
+        "RightLeg",
+        "RightFoot",
+        "RightToeBase",
+        "Spine02",
+        "Spine01",
+        "Spine",
+        "LeftShoulder",
+        "LeftArm",
+        "LeftForeArm",
+        "LeftHand",
+        "RightShoulder",
+        "RightArm",
+        "RightForeArm",
+        "RightHand",
+        "neck",
+        "Head",
+        "head_end",
+        "headfront"
+      ],
+      "animationen": [
+        {
+          "name": "Armature|clip0|baselayer",
+          "sekunden": 0.03
+        }
+      ],
+      "rolle": "person",
+      "zielhoeheMeter": 1.7,
+      "frontZeigtNach": "+z",
+      "hinweis": "Fußgänger. Gleiches 24-Bone-Skelett wie der Rider — dieselbe Pose-Funktion funktioniert. Kommt in T-Pose: Arme über X um ca. 1,32 senken. Material braucht skinning=true, keine Outline."
+    },
+    "person-The_Horizon_Healer.glb": {
+      "groesseKB": 1365,
+      "geriggt": true,
+      "masseInDatei": {
+        "breite": 1.7,
+        "hoehe": 1.665,
+        "tiefe": 0.352,
+        "minY": 0,
+        "laengsachse": "x"
+      },
+      "knotenSkalierung": [
+        "0.01,0.01,0.01"
+      ],
+      "bones": [
+        "Hips",
+        "LeftUpLeg",
+        "LeftLeg",
+        "LeftFoot",
+        "LeftToeBase",
+        "RightUpLeg",
+        "RightLeg",
+        "RightFoot",
+        "RightToeBase",
+        "Spine02",
+        "Spine01",
+        "Spine",
+        "LeftShoulder",
+        "LeftArm",
+        "LeftForeArm",
+        "LeftHand",
+        "RightShoulder",
+        "RightArm",
+        "RightForeArm",
+        "RightHand",
+        "neck",
+        "Head",
+        "head_end",
+        "headfront"
+      ],
+      "animationen": [
+        {
+          "name": "Armature|clip0|baselayer",
+          "sekunden": 0.03
+        }
+      ],
+      "rolle": "person",
+      "zielhoeheMeter": 1.7,
+      "frontZeigtNach": "+z",
+      "hinweis": "Fußgänger. Gleiches 24-Bone-Skelett wie der Rider — dieselbe Pose-Funktion funktioniert. Kommt in T-Pose: Arme über X um ca. 1,32 senken. Material braucht skinning=true, keine Outline."
+    }
+  },
+  "regeln": {
+    "geriggteModelle": [
+      "Material braucht skinning=true, sonst rendert Three r128 die Bind-Pose (T-Pose).",
+      "Box3.setFromObject ist unzuverlässig — Maße aus masseInDatei nehmen.",
+      "Keine Inverted-Hull-Outline: die Kopie bleibt in Bind-Pose und verdeckt die Figur.",
+      "Bind-Pose steckt in den Bone-Rotationen — Winkel als Offset addieren, nie absolut setzen.",
+      "Arme aus der T-Pose senken: Rotation um X. Z schwenkt nur vor und zurück."
+    ],
+    "alleModelle": [
+      "Vor dem Einbau optimieren: gltf-transform resize + webp.",
+      "Längsachse auf z drehen, Fußpunkt auf y=0 legen.",
+      "toonifyModel() für den Cel-Look, danach flatShading über flattenAll()."
+    ]
+  }
+}
