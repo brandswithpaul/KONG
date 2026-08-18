@@ -1173,6 +1173,16 @@ function toonifyDeep(v){
   return toonify(v);
 }
 for(const k in M) M[k] = toonifyDeep(M[k]);
+// Alles in M ist geteilt: dieselbe Instanz haengt an hunderten Meshes. entsorge()
+// muss die Finger davon lassen, sonst ist nach dem ersten Recyceln die Strasse weg.
+(function(){
+  const merke = function(m){
+    if(!m) return;
+    m.userData = m.userData || {}; m.userData.geteilt = true;
+    if(m.map){ m.map.userData = m.map.userData || {}; m.map.userData.geteilt = true; }
+  };
+  for(const k in M) Array.isArray(M[k]) ? M[k].forEach(merke) : merke(M[k]);
+})();
 var hausTemplates = [];
 const HAEUSER = ['haus1-backstein-schmal','haus2-creme-breit','haus3-ocker-mittel','haus4-oliv-schmal'];
 (function(){
@@ -1402,6 +1412,7 @@ function propAusModell(name, streuung){
   if(!t) return null;
   const k = t.userData.hoehe * (1 + (Math.random() - 0.5) * (streuung || 0.2));
   const g = t.clone();
+  g.userData.klon = true;      // teilt Geometrie mit der Vorlage — nie entsorgen
   g.scale.setScalar(k);
   g.rotation.y = Math.random() * Math.PI * 2;
   return g;
@@ -1418,6 +1429,7 @@ const BAUM_GLBS = ['assets/getkong-tree1.glb', 'assets/getkong-tree2.glb',
 function baumAusModell(hoehe){
   if(!baumModelle.length) return null;
   const kopie = baumModelle[(Math.random() * baumModelle.length) | 0].clone();
+  kopie.userData.klon = true;
   kopie.scale.setScalar(hoehe);
   kopie.rotation.y = Math.random() * Math.PI * 2;
   return kopie;
@@ -2780,7 +2792,7 @@ function makeWindows(bw, bh, faceMat){
 }
 function decorateChunk(ch){
   // clear old deco
-  for(const d of ch.deco) ch.group.remove(d);
+  for(const d of ch.deco){ ch.group.remove(d); entsorge(d); }
   ch.deco.length = 0;
   const z0 = 0; // local
   // buildings both sides
@@ -2810,6 +2822,7 @@ function decorateChunk(ch){
       if(modell){
         const hoehe = 9 + Math.random() * 7;
         const inst = modell.clone();
+        inst.userData.klon = true;
         inst.scale.setScalar(hoehe);
         inst.rotation.y = side < 0 ? Math.PI/2 : -Math.PI/2;
         const breiteZ = modell.userData.breite * hoehe;   // nach der Drehung liegt sie auf z
@@ -3029,6 +3042,11 @@ const trafficLights = [];
 // beginnt es, ab 190 m ist es voll. Kostet nichts und hat keine Kante.
 function fernAbdunkeln(mat, ab, bis, faktor){
   if(!mat) return;
+  // OHNE customProgramCacheKey passiert nichts Sichtbares: three sucht das
+  // Programm ueber einen Schluessel aus den Materialparametern. Asphalt und
+  // Gehweg sind beide Toon+Map, haben also denselben Schluessel — der zweite
+  // bekommt stillschweigend das Programm des ersten, ohne die Einspeisung.
+  mat.customProgramCacheKey = function(){ return 'fern' + ab + '_' + bis + '_' + faktor; };
   mat.onBeforeCompile = function(shader){
     shader.vertexShader = 'varying float vFernTiefe;\n' + shader.vertexShader.replace(
       '#include <project_vertex>',
@@ -3040,10 +3058,6 @@ function fernAbdunkeln(mat, ab, bis, faktor){
   };
   mat.needsUpdate = true;
 }
-fernAbdunkeln(M.asphalt,  70, 190, 0.42);
-fernAbdunkeln(M.sidewalk, 70, 190, 0.48);
-fernAbdunkeln(M.dash,     70, 190, 0.40);
-
 function buildChunks(){
   for(let i=0;i<CFG.chunkCount;i++){
     const group = new THREE.Group();
@@ -3422,6 +3436,7 @@ function spawnCurb(){
   const lieferHaus = zufallsHaus();
   if(lieferHaus){
     const h = lieferHaus.clone();
+    h.userData.klon = true;
     const hoehe = HAUS_HOEHE * (0.92 + Math.random() * 0.2);
     h.scale.setScalar(hoehe);
     h.rotation.y = HAUS_DREHUNG;
@@ -3569,6 +3584,28 @@ function spawnCurb(){
   }catch(e){}
   S.nextCurbZ = zEnd - (CFG.curbGapMin + Math.random()*CFG.curbGapVar);
 }
+// Aufraeumen beim Recyceln. Bisher wurden Zonen und Dekoration nur aus der
+// Szene genommen — ihre Geometrien, Materialien und Texturen blieben auf der
+// Grafikkarte liegen. Ueber einen langen Lauf summiert sich das und das Spiel
+// wird spuerbar langsamer.
+// Klone (Haeuser, Requisiten, Autos) teilen ihre Geometrie mit der Vorlage:
+// wer die entsorgt, radiert die Vorlage fuer alle kommenden Exemplare mit aus.
+// Deshalb bricht die Rekursion an jedem Knoten mit userData.klon ab.
+function entsorge(objekt){
+  if(!objekt || objekt.userData && objekt.userData.klon) return;
+  if(objekt.isMesh || objekt.isLine || objekt.isPoints){
+    if(objekt.geometry && objekt.geometry.dispose) objekt.geometry.dispose();
+    const mats = Array.isArray(objekt.material) ? objekt.material : [objekt.material];
+    for(const m of mats){
+      if(!m) continue;
+      if(m.userData && m.userData.geteilt) continue;   // M.* und andere geteilte
+      if(m.map && m.map.userData && !m.map.userData.geteilt && m.map.dispose) m.map.dispose();
+      if(m.dispose) m.dispose();
+    }
+  }
+  const kinder = objekt.children ? objekt.children.slice() : [];
+  for(const k of kinder) entsorge(k);
+}
 function manageCurbs(){
   // Weiter voraus als die Abschnitte recycelt werden (die landen rund 780 m
   // vorn). Sonst weiß der Abschnitt beim Dekorieren noch nichts von der Zone
@@ -3576,7 +3613,10 @@ function manageCurbs(){
   while(S.nextCurbZ > S.z - 900) spawnCurb();
   for(let i=S.curbs.length-1;i>=0;i--){
     if(S.curbs[i].zEnd > S.z + 80){
-      scene.remove(S.curbs[i].group);
+      const weg = S.curbs[i];
+      scene.remove(weg.group);
+      if(weg.ztex && weg.ztex.dispose) weg.ztex.dispose();   // Klon je Zone
+      entsorge(weg.group);
       S.curbs.splice(i,1);
     }
   }
@@ -4038,6 +4078,7 @@ function manageSites(){
   for(let i=sites.length-1;i>=0;i--){
     if(sites[i].zC > S.z + 60){
       scene.remove(sites[i].g);
+      entsorge(sites[i].g);
       sites.splice(i,1);
     }
   }
@@ -4095,6 +4136,7 @@ function makeCar(){
   let tpl = autos.length ? autos[(Math.random()*autos.length)|0] : null;
   if(tpl){
     const klon = tpl.clone();
+    klon.userData.klon = true;
     // Leichte Streuung in der Größe: bei nur zwei Modellen im Topf lesen sich
     // sonst alle Fahrzeuge als dasselbe Auto hintereinander.
     klon.scale.setScalar(0.95 + Math.random()*0.11);
@@ -6564,6 +6606,12 @@ try{
   el('realInput').value = localStorage.getItem('getkong-real') || '';
   el('mailInput').value = localStorage.getItem('getkong-mail') || '';
 }catch(e){}
+// Erst hier, ganz am Ende: `for(const k in M) M[k] = toonifyDeep(M[k])` tauscht
+// die Materialien gegen neue Objekte aus. Wer den Hook vorher setzt, haengt ihn
+// an ein Material, das niemand mehr benutzt.
+fernAbdunkeln(M.asphalt,  70, 190, 0.42);
+fernAbdunkeln(M.sidewalk, 70, 190, 0.48);
+fernAbdunkeln(M.dash,     70, 190, 0.40);
 loop();
 </script>
 </body>
