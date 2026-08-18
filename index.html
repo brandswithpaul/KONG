@@ -883,9 +883,14 @@ sun.castShadow = true;
 // Kante dann von Bild zu Bild. Jetzt 4096 Pixel auf 76 m (1,9 cm je Texel) und
 // ein weicher Rand über shadow.radius.
 sun.shadow.mapSize.set(4096, 4096);
-sun.shadow.camera.left = -38; sun.shadow.camera.right = 38;
-sun.shadow.camera.top = 38; sun.shadow.camera.bottom = -38;
-sun.shadow.camera.near = 10; sun.shadow.camera.far = 200;
+// Der Kasten deckt jetzt 220 statt 76 m ab. Vorher endete der Schattenwurf
+// 38 m vor dem Fahrer: davor lag die Straße im Schatten der Häuser, dahinter
+// wurde sie voll beleuchtet — als heller Keil, der mitfuhr. Das war das
+// "Licht auf der Straße". 4096 Pixel auf 220 m sind 5,4 cm je Texel; die
+// Kanten werden weicher, dafür ist der Bruch weg.
+sun.shadow.camera.left = -110; sun.shadow.camera.right = 110;
+sun.shadow.camera.top = 110; sun.shadow.camera.bottom = -110;
+sun.shadow.camera.near = 10; sun.shadow.camera.far = 340;
 // normalBias schiebt entlang der Flächennormale statt entlang des Lichtstrahls —
 // genau das, was streifende Winkel brauchen. Der alte konstante Bias erzeugte
 // dort das Muster aus hellen und dunklen Bändern.
@@ -6383,7 +6388,7 @@ function update(dt){
   wolkenUpdate();
 
   // --- Sonne + Himmel folgen dem Spieler ---
-  // Der Kasten deckt 76 m ab — er wird nach vorn geschoben, weil dort gefahren
+  // Der Kasten deckt 220 m ab — er wird nach vorn geschoben, weil dort gefahren
   // wird. Hinter dem Fahrer braucht niemand Schatten.
   // Kasten leicht nach vorn: dort wird gefahren. Weit genug hinter dem Fahrer,
   // dass sein eigener Schatten sicher drin liegt.
