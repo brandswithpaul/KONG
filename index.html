@@ -4725,6 +4725,31 @@ function boardModus(m){
   boardLaden(false);
 }
 
+// Kontakte gehen in eine eigene Tabelle. Sie bleiben so lange in der lokalen
+// Warteschlange, bis Supabase sie bestaetigt — am Stand faellt regelmaessig das
+// WLAN aus, und ein verlorener Lead ist nicht wiederherstellbar.
+var kontaktLaeuft = false;
+function kontakteSenden(){
+  if(kontaktLaeuft) return;
+  let liste;
+  try{ liste = JSON.parse(localStorage.getItem('gk_kontakte') || '[]'); }catch(e){ return; }
+  if(!liste.length) return;
+  kontaktLaeuft = true;
+  const zeilen = liste.map(function(k){
+    return {username: k.user, realname: k.real, email: k.mail,
+            zustimmung: !!k.zustimmung, created_at: k.ts};
+  });
+  fetch(SB_URL + '/rest/v1/getkong_kontakte', {
+    method: 'POST',
+    headers: { apikey: SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify(zeilen)
+  }).then(function(r){
+    kontaktLaeuft = false;
+    // Nur bei echtem Erfolg leeren. Bei 401/403 (Policy fehlt) oder Netzfehler
+    // bleibt alles liegen und geht beim naechsten Start erneut raus.
+    if(r.ok){ try{ localStorage.removeItem('gk_kontakte'); }catch(e){} }
+  }).catch(function(){ kontaktLaeuft = false; });
+}
 function sbSubmit(cb){
   try{
     fetch(SB_URL + '/rest/v1/getkong_scores', {
@@ -4997,6 +5022,7 @@ function startGame(){
                     zustimmung: !!(dsBox && dsBox.checked), ts: new Date().toISOString()});
         localStorage.setItem('gk_kontakte', JSON.stringify(liste.slice(-500)));
       }
+      kontakteSenden();
     }
   }catch(e){}
   try{
@@ -6404,6 +6430,7 @@ updateBestLine();
 // solange oder falls die Bestenliste nicht antwortet.
 renderMenuScores(null);
 sbFetchTop(function(list){ updateBestLine(); renderMenuScores(list); });
+kontakteSenden();   // Reste aus Laeufen ohne Netz nachreichen
 applyOverlayPattern();
 el('nameInput').value = localStorage.getItem('getkong-name') || '';
 try{
