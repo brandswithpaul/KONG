@@ -3592,20 +3592,64 @@ function initVanModel(){
 // ---------- Weitere GLB-Modelle: Autos + Coin ----------
 // Zählt mit, wie viele Modelle offen sind — der Ladebalken selbst läuft über
 // THREE.DefaultLoadingManager, der auch die Texturen erfasst.
-window.LADE = {angefragt: 0, fertig: 0};
+window.LADE = {angefragt: 0, fertig: 0, fehler: 0};
+// Wenn die Modelle nicht ankommen (file:// statt Server, abgerissenes WLAN,
+// leerer Cache), faellt das Spiel still auf Quader und Strichmaennchen zurueck
+// — es sieht dann aus wie der allererste Stand. Am Messestand darf das nicht
+// unbemerkt passieren, also sagt es der Bildschirm.
+function ladeWarnung(){
+  const L = window.LADE || {};
+  if(!L.fehler) return;
+  let box = document.getElementById('ladeFehler');
+  if(!box){
+    box = document.createElement('div');
+    box.id = 'ladeFehler';
+    box.style.cssText = 'position:fixed;left:50%;bottom:16px;transform:translateX(-50%);' +
+      'z-index:40;background:#c0432f;color:#fdf8ea;font-family:var(--klein);font-size:12px;' +
+      'letter-spacing:.08em;padding:9px 16px;border-radius:99px;cursor:pointer;' +
+      'box-shadow:0 6px 20px rgba(0,0,0,.45)';
+    box.addEventListener('click', function(){ location.reload(); });
+    document.body.appendChild(box);
+  }
+  box.textContent = L.fehler + ' Modelle fehlen — tippen zum Neuladen';
+}
 function loadGLB(b64, path, setup){
   if(typeof THREE.GLTFLoader !== 'function') return;
   var fehler = null;
   // LADE wird weiter unten im Skript gesetzt, loadGLB läuft aber schon vorher
   // (Funktionsdeklarationen sind gehoistet, Zuweisungen nicht) — deshalb hier
   // notfalls selbst anlegen.
-  if(!window.LADE) window.LADE = {angefragt: 0, fertig: 0};
+  if(!window.LADE) window.LADE = {angefragt: 0, fertig: 0, fehler: 0};
+// Wenn die Modelle nicht ankommen (file:// statt Server, abgerissenes WLAN,
+// leerer Cache), faellt das Spiel still auf Quader und Strichmaennchen zurueck
+// — es sieht dann aus wie der allererste Stand. Am Messestand darf das nicht
+// unbemerkt passieren, also sagt es der Bildschirm.
+function ladeWarnung(){
+  const L = window.LADE || {};
+  if(!L.fehler) return;
+  let box = document.getElementById('ladeFehler');
+  if(!box){
+    box = document.createElement('div');
+    box.id = 'ladeFehler';
+    box.style.cssText = 'position:fixed;left:50%;bottom:16px;transform:translateX(-50%);' +
+      'z-index:40;background:#c0432f;color:#fdf8ea;font-family:var(--klein);font-size:12px;' +
+      'letter-spacing:.08em;padding:9px 16px;border-radius:99px;cursor:pointer;' +
+      'box-shadow:0 6px 20px rgba(0,0,0,.45)';
+    box.addEventListener('click', function(){ location.reload(); });
+    document.body.appendChild(box);
+  }
+  box.textContent = L.fehler + ' Modelle fehlen — tippen zum Neuladen';
+}
   if(path){
     window.LADE.angefragt++;
     const fertig = function(){ window.LADE.fertig++; };
     const echt = setup;
     setup = function(gltf){ try{ echt(gltf); } finally { fertig(); } };
-    fehler = fertig;
+    fehler = function(){
+      window.LADE.fehler = (window.LADE.fehler || 0) + 1;
+      fertig();
+      if(typeof ladeWarnung === 'function') ladeWarnung();
+    };
   }
   try{
     if(b64){
