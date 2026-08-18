@@ -1400,7 +1400,12 @@ var propModelle = {};
     wrap.add(m);
     toonifyModel(wrap);
     addOutline(wrap, 0.02);
-    shadowify(wrap);
+    // KEIN shadowify: Requisiten und Pflanzen sind mit 13.000 bis 32.000
+    // Dreiecken je Exemplar die schwersten Objekte der Szene und stehen
+    // dutzendfach je Abschnitt. Ihr Schattenwurf ist bei dieser Blickhöhe
+    // kaum zu sehen, kostet aber den halben Schattenpass. Sie EMPFANGEN
+    // weiter Schatten, sie werfen nur keinen mehr.
+    wrap.traverse(function(o){ if(o.isMesh){ o.castShadow = false; o.receiveShadow = true; } });
     wrap.userData.breite = groesse.x;
     wrap.userData.tiefe = groesse.z;
     wrap.userData.hoehe = hoehe;
@@ -1413,6 +1418,7 @@ function propAusModell(name, streuung){
   const k = t.userData.hoehe * (1 + (Math.random() - 0.5) * (streuung || 0.2));
   const g = t.clone();
   g.userData.klon = true;      // teilt Geometrie mit der Vorlage — nie entsorgen
+  g.userData.prop = true;      // in der Ferne ausblendbar
   g.scale.setScalar(k);
   g.rotation.y = Math.random() * Math.PI * 2;
   return g;
@@ -3606,6 +3612,33 @@ function entsorge(objekt){
   const kinder = objekt.children ? objekt.children.slice() : [];
   for(const k of kinder) entsorge(k);
 }
+// Requisiten in der Ferne abschalten. Ohne das rendert die Kamera bis 400 m
+// jede Blume und jeden Busch mit voller Geometrie — bei 13.000 bis 32.000
+// Dreiecken je Exemplar summiert sich das auf ueber zwei Millionen Dreiecke
+// pro Bild. Ab 120 m sind sie ohnehin nur noch dunkle Flecken.
+var propListe = [], propTakt = 0;
+function requisitenAusduennen(){
+  // Nicht jedes Bild neu einsammeln — der Bestand aendert sich nur beim
+  // Recyceln der Abschnitte.
+  if(--propTakt <= 0){
+    propTakt = 30;
+    propListe.length = 0;
+    scene.traverse(function(o){ if(o.userData && o.userData.prop) propListe.push(o); });
+  }
+  for(const p of propListe){
+    const dz = Math.abs(p.getWorldPosition(_propV).z - S.z);
+    p.visible = dz < 120;
+  }
+  // Ganze Abschnitte abschalten. Die Kamera schaut eine gerade Straße hinunter,
+  // da liegen fast alle 14 Abschnitte im Sichtkegel — die Häuser allein sind
+  // rund 1,9 Millionen Dreiecke. Der Nebel schluckt ab 210 m ohnehin alles,
+  // also braucht es dahinter keine Geometrie mehr.
+  for(const ch of chunks){
+    const mitte = ch.group.position.z;
+    ch.group.visible = (mitte < S.z + CFG.chunkLen) && (mitte > S.z - 260);
+  }
+}
+const _propV = new THREE.Vector3();
 function manageCurbs(){
   // Weiter voraus als die Abschnitte recycelt werden (die landen rund 780 m
   // vorn). Sonst weiß der Abschnitt beim Dekorieren noch nichts von der Zone
@@ -6284,6 +6317,7 @@ function update(dt){
     }
   }
   manageCurbs();
+  requisitenAusduennen();
   // Zonen pulsieren + Chevrons laufen + Marker bounct, solange unbenutzt
   // E · Zustände: außerhalb ruhig, drin heller und schneller, danach erloschen.
   const jetzt = performance.now();
