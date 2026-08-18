@@ -6602,7 +6602,7 @@ function loop(){
   updateFunken(Math.min(clock.getDelta ? 0.05 : 0.016, 0.05));
   updateAmbience();
   if(gradePass) gradePass.uniforms.uSeed.value = (performance.now() % 10000) * 0.0001;
-  if(composer) composer.render();
+  if(composer && !window.__composerAus) composer.render();
   else renderer.render(scene, camera);
 }
 // Brokkoli-Regen links und rechts vom Startbildschirm
@@ -6695,9 +6695,62 @@ fernAbdunkeln(M.dash,     30, 130, 0.38);
 // Versionsstempel. Ohne den laesst sich nicht unterscheiden, ob eine Aenderung
 // nicht wirkt oder ob der Browser noch die alte Datei aus dem Cache zeigt —
 // GitHub Pages liefert index.html mit max-age=600 aus.
-const BUILD = 'B12 · 19.08. 01:10';
+const BUILD = 'B13 · 19.08. 01:30';
 window.BUILD = BUILD;
 (function(){ const f = el('buildStempel'); if(f) f.textContent = ' · ' + BUILD; })();
+// ---------- Diagnose-Schalter (?debug=1) ----------
+// Ich kann den Fehler auf meinen Geraeten nicht sehen. Statt weiter zu raten:
+// jeder Verdaechtige einzeln abschaltbar, direkt im Spiel.
+if(location.search.indexOf('debug=1') >= 0){
+  const box = document.createElement('div');
+  box.style.cssText = 'position:fixed;left:10px;bottom:10px;z-index:60;display:flex;' +
+    'flex-direction:column;gap:5px;background:rgba(10,20,14,.92);border:2px solid #c2e67e;' +
+    'border-radius:12px;padding:10px 12px;font:12px/1.35 ui-monospace,monospace;color:#fdf8ea';
+  const schalter = [
+    ['1 · Schatten',        function(an){ renderer.shadowMap.enabled = an;
+       scene.traverse(function(o){ if(o.isMesh && o.material){
+         (Array.isArray(o.material)?o.material:[o.material]).forEach(function(m){ m.needsUpdate = true; }); } }); }],
+    ['2 · Bloom',           function(an){ if(window.bloomPass) bloomPass.enabled = an; }],
+    ['3 · Grading + Korn',  function(an){ if(window.gradePass) gradePass.enabled = an; }],
+    ['4 · Nebel',           function(an){ scene.fog = an ? window.__fogAlt : null;
+       scene.traverse(function(o){ if(o.isMesh && o.material){
+         (Array.isArray(o.material)?o.material:[o.material]).forEach(function(m){ m.needsUpdate = true; }); } }); }],
+    ['5 · Strassentextur',  function(an){ M.asphalt.map = an ? window.__mapAlt : null;
+       if(!an) M.asphalt.color.setHex(0x5b6157); else M.asphalt.color.setHex(0xffffff);
+       M.asphalt.needsUpdate = true; }],
+    ['6 · Fern-Abdunklung', function(an){ [M.asphalt, M.sidewalk, M.dash].forEach(function(m){
+       if(!an){ m.userData.hookAlt = m.onBeforeCompile; m.onBeforeCompile = function(){};
+                m.customProgramCacheKey = function(){ return 'aus'; }; }
+       else   { if(m.userData.hookAlt) m.onBeforeCompile = m.userData.hookAlt;
+                m.customProgramCacheKey = function(){ return 'an'; }; }
+       m.needsUpdate = true; }); }],
+    ['7 · Ganzer Composer',  function(an){ window.__composerAus = !an; }]
+  ];
+  window.__fogAlt = scene.fog;
+  window.__mapAlt = M.asphalt.map;
+  const kopf = document.createElement('div');
+  kopf.textContent = 'Diagnose · ' + BUILD;
+  kopf.style.cssText = 'color:#c2e67e;font-weight:700;margin-bottom:2px';
+  box.appendChild(kopf);
+  schalter.forEach(function(sch, i){
+    const l = document.createElement('label');
+    l.style.cssText = 'display:flex;gap:7px;align-items:center;cursor:pointer';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.checked = true;
+    cb.addEventListener('change', function(){ sch[1](cb.checked); });
+    l.appendChild(cb);
+    l.appendChild(document.createTextNode(sch[0]));
+    box.appendChild(l);
+    window.addEventListener('keydown', function(e){
+      if(e.key === String(i + 1)){ cb.checked = !cb.checked; sch[1](cb.checked); }
+    });
+  });
+  const hinweis = document.createElement('div');
+  hinweis.textContent = 'Haken raus = aus. Auch per Zifferntaste.';
+  hinweis.style.cssText = 'opacity:.6;margin-top:3px';
+  box.appendChild(hinweis);
+  document.body.appendChild(box);
+}
 loop();
 </script>
 </body>
