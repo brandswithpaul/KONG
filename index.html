@@ -150,7 +150,8 @@
     text-transform:uppercase;padding:6px 14px;border-radius:3px;cursor:pointer;
     background:transparent;color:#fdf8ea;border:2px solid rgba(194,230,126,.5)}
   .btabs.aktiv{background:var(--lime);color:#16281f;border-color:var(--lime)}
-  #boardListe{width:100%;padding:10px 2px;
+  #boardListe{width:100%;padding:10px 2px;max-height:min(52vh,460px);
+    overflow-y:auto;overscroll-behavior:contain;
     border-top:1px solid rgba(253,248,234,.18);border-bottom:1px solid rgba(253,248,234,.18)}
   .brow{display:flex;align-items:baseline;gap:9px;padding:4px 2px;
     font-family:var(--klein);font-size:13px;color:#fdf8ea;font-variant-numeric:tabular-nums}
@@ -231,6 +232,10 @@
       linear-gradient(rgba(10,26,22,.55) 0%, rgba(10,26,22,.15) 20%, rgba(10,26,22,0) 38%),
       linear-gradient(rgba(8,20,17,0) 44%, rgba(8,20,17,.45) 66%, rgba(6,16,13,.80) 100%)}
 
+  #menu #menuScores::-webkit-scrollbar, #boardListe::-webkit-scrollbar{width:6px}
+  #menu #menuScores::-webkit-scrollbar-thumb, #boardListe::-webkit-scrollbar-thumb{
+    background:rgba(194,230,126,.45);border-radius:99px}
+  #menu #menuScores::-webkit-scrollbar-track, #boardListe::-webkit-scrollbar-track{background:none}
   .brokrain{position:fixed;top:0;bottom:0;width:18%;z-index:1;pointer-events:none;overflow:hidden}
   .brokrain.l{left:0} .brokrain.r{right:0}
   .brok{position:absolute;top:-14%;width:52px;opacity:.95;
@@ -283,6 +288,7 @@
     box-shadow:0 0 0 3px rgba(12,26,21,.75), 0 0 34px rgba(194,230,126,.55),
       0 0 70px rgba(194,230,126,.22), 0 20px 36px -16px rgba(6,16,12,.8)}
   #menu #menuScores{width:100%;flex:1;display:flex;flex-direction:column;justify-content:center;
+    max-height:min(46vh,420px);overflow-y:auto;overscroll-behavior:contain;
     background:none;border:none;padding:0;box-shadow:none;
     font-family:var(--klein);font-size:14px;color:#fdf8ea}
   #menu #menuScores .srow{display:flex;align-items:baseline;gap:8px;padding:4px 0;
@@ -847,7 +853,7 @@ const keys = {};
 // ---------- Three basics ----------
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xb7cca7); // Salbei — dieselbe Palette wie die Kuppel
-scene.fog = new THREE.Fog(0xe4e0c1, 210, 380);  // Sandton des Horizonts. Der Dunst setzt
+scene.fog = new THREE.Fog(0xb9c3a2, 210, 380);  // Sandton des Horizonts. Der Dunst setzt
 // erst bei 210 m ein: vorher lag er ab 80 m über der halben Straße und hat die Häuser
 // aufgehellt, statt nur das Ende der Flucht weichzuzeichnen.
 
@@ -4646,7 +4652,7 @@ function boardZeitfilter(){
 // Ausgeblendete Namen: Testzeilen, die per anon-Key nicht mehr gelöscht werden
 // können (RLS erlaubt kein DELETE). Hier ist auch der Platz für Sperrbegriffe,
 // wenn am Stand jemand einen Namen einträgt, der nicht auf den Screen soll.
-const NAMEN_SPERRE = /^(ZZTEST|ZZPROBE)$/;
+const NAMEN_SPERRE = /^(ZZTEST|ZZPROBE|PRUEFLAUF)$/;
 function bestenProName(zeilen){
   const beste = new Map();
   for(const z of (zeilen || [])){
@@ -4764,14 +4770,19 @@ function kontakteSenden(){
     if(r.ok){ try{ localStorage.removeItem('gk_kontakte'); }catch(e){} }
   }).catch(function(){ kontaktLaeuft = false; });
 }
-function sbSubmit(cb){
+function sbSubmit(punkte, cb){
+  // punkte ist der beste der fuenf Versuche. Vorher stand hier S.score — das
+  // war der Punktestand des LETZTEN Lebens. Wer im dritten Versuch 2.757 holte
+  // und im fuenften nach 108 m verunglueckte, landete mit 108 in der Liste,
+  // waehrend die Ergebniskarte 2.757 zeigte.
+  const wert = Math.floor((punkte === undefined || punkte === null) ? S.score : punkte);
   try{
     fetch(SB_URL + '/rest/v1/getkong_scores', {
       method: 'POST',
       headers: { apikey: SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
       body: JSON.stringify({
         name: (S.playerName || '—').substring(0, 14),
-        dist: Math.floor(S.score),   // Punkte — danach wird gerankt
+        dist: wert,                  // Punkte — danach wird gerankt
         deliveries: S.deliveries,
         // ACHTUNG: `level` hat in Supabase ein CHECK zwischen 1 und 10. Hier
         // standen die gefahrenen Meter — jeder Lauf über 10 m wurde mit
@@ -4784,6 +4795,8 @@ function sbSubmit(cb){
 }
 // Der Startbildschirm zeigt die volle Liste, nicht nur fünf Plätze — am Stand
 // will man sehen, wo man landet, bevor man fährt.
+// Zehn Plaetze sind sichtbar, alles darueber wird scrollbar — am Stand stehen
+// nach einer Stunde deutlich mehr als zehn Namen in der Liste.
 const MENU_PLAETZE = 10;
 function renderMenuScores(list){
   const box = el('menuScores'), row = el('bestRow');
@@ -4792,7 +4805,9 @@ function renderMenuScores(list){
   box.hidden = false;
   box.style.display = 'block';
   const RANG = ['1ST','2ND','3RD','4TH','5TH','6TH','7TH','8TH','9TH','10TH'];
-  const eintraege = (list || []).slice(0, MENU_PLAETZE);
+  function rang(i){ return i === 0 ? '🏆' : (RANG[i] || (i + 1) + '.'); }
+  const eintraege = (list || []);
+  const zeilen = Math.max(MENU_PLAETZE, eintraege.length);
   let html = '';
   // Fünf leere Striche lesen sich wie ein Ladefehler. Beim echten Leerstand sagen,
   // dass die Liste offen ist — und den eigenen Bestwert daneben stellen.
@@ -4803,7 +4818,7 @@ function renderMenuScores(list){
             : 'Bestenliste offline — dein Lauf zählt trotzdem') +
       (eigen ? ' · dein Bester: ' + eigen.toLocaleString('de-DE') : '') + '</div>';
   }
-  for(let i = 0; i < MENU_PLAETZE; i++){
+  for(let i = 0; i < zeilen; i++){
     const s = eintraege[i];
     if(s){
       const nm = (s.name || '—').replace(/</g, '&lt;');
@@ -4812,14 +4827,14 @@ function renderMenuScores(list){
       // Nur Rang, Name und Meter — die Detailzeile mit Multiplikator und
       // Lieferungen ist raus, sie hat die Tafel zerfranst.
       html += '<div class="srow">' +
-        '<span class="rk">' + (i === 0 ? '🏆' : RANG[i]) + '</span>' +
+        '<span class="rk">' + rang(i) + '</span>' +
         '<span class="sname">' + nm + '</span>' +
         '<span class="fill"></span>' +
         '<span class="sc">' + s.dist.toLocaleString('de-DE') + ' m</span></div>';
     } else {
       // Freier Platz wie im Spielautomaten: Rang steht da, wartet auf jemanden
       html += '<div class="srow leer">' +
-        '<span class="rk">' + RANG[i] + '</span>' +
+        '<span class="rk">' + rang(i) + '</span>' +
         '<span class="sname">— — —</span>' +
         '<span class="fill"></span>' +
         '<span class="sc">0 m</span></div>';
@@ -5178,7 +5193,7 @@ function schichtEnde(){
   const res = saveScore(finale, S.deliveries);
   renderScores(res.top, res.entry);
   const ownDist = Math.floor(finale);
-  sbSubmit(function(){
+  sbSubmit(finale, function(){
     sbFetchTop(function(list){
       if(list){ renderMenuScores(list); }
       if(list && S.mode === 'over'){ renderGlobal(list, ownDist); updateBestLine(); }
