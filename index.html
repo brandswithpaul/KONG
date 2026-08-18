@@ -705,7 +705,8 @@
         <div id="tonHinweis" hidden>Für Ton einmal ins Bild klicken</div>
       </div>
     </div>
-    <div class="legal">Fiktives Spiel. Wirf zuhause bitte kein Gemüse in fremde Fenster.</div>
+    <div class="legal">Fiktives Spiel. Wirf zuhause bitte kein Gemüse in fremde Fenster.
+    <span id="buildStempel"></span></div>
   </div>
 </div>
 
@@ -6691,6 +6692,12 @@ try{
 fernAbdunkeln(M.asphalt,  30, 130, 0.40);
 fernAbdunkeln(M.sidewalk, 30, 130, 0.46);
 fernAbdunkeln(M.dash,     30, 130, 0.38);
+// Versionsstempel. Ohne den laesst sich nicht unterscheiden, ob eine Aenderung
+// nicht wirkt oder ob der Browser noch die alte Datei aus dem Cache zeigt —
+// GitHub Pages liefert index.html mit max-age=600 aus.
+const BUILD = 'B12 · 19.08. 01:10';
+window.BUILD = BUILD;
+(function(){ const f = el('buildStempel'); if(f) f.textContent = ' · ' + BUILD; })();
 loop();
 </script>
 </body>
