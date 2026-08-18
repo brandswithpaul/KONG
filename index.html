@@ -858,7 +858,11 @@ scene.fog = new THREE.Fog(0xb9c3a2, 210, 380);  // Sandton des Horizonts. Der Du
 // erst bei 210 m ein: vorher lag er ab 80 m über der halben Straße und hat die Häuser
 // aufgehellt, statt nur das Ende der Flucht weichzuzeichnen.
 
-const camera = new THREE.PerspectiveCamera(64, innerWidth/innerHeight, 0.1, 400);
+// near von 0.1 auf 0.6: die Nahebene bestimmt, wie die Tiefengenauigkeit
+// verteilt wird — bei 0.1 steckt fast alles davon in den ersten Metern und in
+// der Ferne bleibt kaum etwas uebrig. Die Kamera steht 5 m hinter dem Fahrer,
+// 0.6 schneidet nichts ab.
+const camera = new THREE.PerspectiveCamera(64, innerWidth/innerHeight, 0.6, 400);
 const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
@@ -1000,9 +1004,20 @@ try{
   // 2x-Display rendert der Composer sonst in halber Auflösung und das Bild wird
   // hochskaliert — genau das sah pixelig aus.
   const puffer = renderer.getDrawingBufferSize(new THREE.Vector2());
+  // DAS war die Ursache der Flecken auf der Fahrbahn: ein WebGLRenderTarget
+  // bekommt in three r128 standardmaessig einen 16-Bit-Tiefenpuffer, waehrend
+  // die Leinwand selbst 24 Bit hat. Ueber den Composer gerendert, verliert die
+  // Szene also die Haelfte der Tiefengenauigkeit — und Strasse (y=0),
+  // Bodenplatte (y=-0.05), Markierung (y=0.015) und Gehweg (y=0.02) liegen so
+  // dicht beieinander, dass sie anfangen, sich gegenseitig zu durchdringen.
+  // Das Ergebnis sind unregelmaessige Flecken, die mit der Kamera wandern und
+  // je nach Grafikkarte auftreten oder nicht. Eine DepthTexture mit
+  // UnsignedInt gibt die 24 Bit zurueck.
+  const tiefe = new THREE.DepthTexture(puffer.x, puffer.y, THREE.UnsignedIntType);
   const hdrZiel = new THREE.WebGLRenderTarget(puffer.x, puffer.y, {
     minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter,
-    format: THREE.RGBAFormat, type: THREE.HalfFloatType
+    format: THREE.RGBAFormat, type: THREE.HalfFloatType,
+    depthBuffer: true, depthTexture: tiefe
   });
   composer = new THREE.EffectComposer(renderer, hdrZiel);
   composer.addPass(new THREE.RenderPass(scene, camera));
@@ -1121,7 +1136,10 @@ const M = {
   // Striche und Zebrastreifen blieben deshalb voll hell, waehrend der Asphalt
   // um sie herum im Schatten lag. Aus der Ferne las sich das als weisse
   // Flaechen auf der Strasse. Jetzt liegen sie im selben Licht wie der Belag.
-  dash: new THREE.MeshLambertMaterial({color:0xc9cdba}),
+  // polygonOffset drueckt die Markierung in der Tiefe vor den Asphalt, ohne sie
+  // geometrisch anzuheben — damit koennen die beiden nie mehr streiten.
+  dash: new THREE.MeshLambertMaterial({color:0xc9cdba,
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2}),
   building: [0xd6cfb6, 0xc9c2a8, 0xb2b896, 0xa4ad8c, 0xb08a72, 0x8c9aa0, 0xc4a88a, 0x8f8977].map(c=>{ // Altbau-Fassaden mit Fenster-Textur
     const face = new THREE.MeshLambertMaterial({color:c, map:facadeTex});
     const plain = new THREE.MeshLambertMaterial({color:c});
@@ -6695,7 +6713,7 @@ fernAbdunkeln(M.dash,     30, 130, 0.38);
 // Versionsstempel. Ohne den laesst sich nicht unterscheiden, ob eine Aenderung
 // nicht wirkt oder ob der Browser noch die alte Datei aus dem Cache zeigt —
 // GitHub Pages liefert index.html mit max-age=600 aus.
-const BUILD = 'B13 · 19.08. 01:30';
+const BUILD = 'B14 · 19.08. 01:45';
 window.BUILD = BUILD;
 (function(){ const f = el('buildStempel'); if(f) f.textContent = ' · ' + BUILD; })();
 // ---------- Diagnose-Schalter (?debug=1) ----------
