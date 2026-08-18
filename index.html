@@ -3022,6 +3022,28 @@ function decorateChunk(ch){
   }
 }
 const trafficLights = [];
+// Die Ferne in den Schatten legen. Der Schattenwurf der Sonne endet zwangs-
+// laeufig irgendwo — dahinter liegt die Strasse voll beleuchtet und leuchtet
+// als heller Keil. Statt den Kasten immer weiter aufzublasen, dunkelt dieser
+// Shader-Zusatz Boden, Gehweg und Markierung mit der Entfernung ab: ab 70 m
+// beginnt es, ab 190 m ist es voll. Kostet nichts und hat keine Kante.
+function fernAbdunkeln(mat, ab, bis, faktor){
+  if(!mat) return;
+  mat.onBeforeCompile = function(shader){
+    shader.vertexShader = 'varying float vFernTiefe;\n' + shader.vertexShader.replace(
+      '#include <project_vertex>',
+      '#include <project_vertex>\n  vFernTiefe = -mvPosition.z;');
+    shader.fragmentShader = 'varying float vFernTiefe;\n' + shader.fragmentShader.replace(
+      '#include <dithering_fragment>',
+      '#include <dithering_fragment>\n  gl_FragColor.rgb *= mix(1.0, ' + faktor.toFixed(2) +
+      ', smoothstep(' + ab.toFixed(1) + ', ' + bis.toFixed(1) + ', vFernTiefe));');
+  };
+  mat.needsUpdate = true;
+}
+fernAbdunkeln(M.asphalt,  70, 190, 0.42);
+fernAbdunkeln(M.sidewalk, 70, 190, 0.48);
+fernAbdunkeln(M.dash,     70, 190, 0.40);
+
 function buildChunks(){
   for(let i=0;i<CFG.chunkCount;i++){
     const group = new THREE.Group();
