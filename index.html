@@ -1087,16 +1087,16 @@ const facadeTex = makeTex(256, 320, function(ctx, w, h){
   }
 }, 2, 2);
 const asphaltTex = makeTex(256, 256, function(ctx, w, h){
-  ctx.fillStyle = '#4a5046'; ctx.fillRect(0, 0, w, h);
+  // Etwas heller als vorher: ohne das Fotobild darunter wirkte 0x4a5046 fast
+  // schwarz, sobald die Fern-Abdunklung darauf liegt.
+  ctx.fillStyle = '#5b6157'; ctx.fillRect(0, 0, w, h);
   for(let i=0;i<2600;i++){
     const v = Math.random();
     ctx.fillStyle = v < 0.5 ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.05)';
     ctx.fillRect(Math.random()*w, Math.random()*h, 1.5, 1.5);
   }
-  for(let i=0;i<7;i++){ // Flickstellen
-    ctx.fillStyle = 'rgba(0,0,0,0.07)';
-    ctx.fillRect(Math.random()*w, Math.random()*h, 20+Math.random()*50, 12+Math.random()*30);
-  }
+  // Keine Flickstellen mehr: große dunkle Rechtecke wiederholen sich mit jeder
+  // Kachel und lesen sich als Flecken. Nur noch das feine Korn oben bleibt.
 }, 1.6, 9);
 const pavingTex = makeTex(256, 256, function(ctx, w, h){
   ctx.fillStyle = '#a8ab99'; ctx.fillRect(0, 0, w, h);
@@ -1470,12 +1470,18 @@ var carSprites = [];   // früh deklariert: der Szenenaufbau ruft makeCar() vor 
 // Boden: echte Texturen statt Volltonflächen
 (function(){
   const L = new THREE.TextureLoader();
-  L.load('assets/env/road.jpg', function(t){
+  // ABGESCHALTET: assets/env/road.jpg ist ein 1024er Asphaltfoto, das mit
+  // repeat(3, 26) über jeden Abschnitt gekachelt wurde. Seine hellen und
+  // dunklen Stellen wiederholen sich dadurch alle paar Meter — das waren die
+  // Flecken auf der Fahrbahn. Ein Foto gehört ohnehin nicht in die Low-Poly-
+  // Stadt; es bleibt bei der prozeduralen Textur (feines Korn, keine Muster).
+  // Rückweg: diesen Block wieder einkommentieren.
+  /* L.load('assets/env/road.jpg', function(t){
     t.encoding = THREE.sRGBEncoding;
     t.wrapS = t.wrapT = THREE.RepeatWrapping;
     t.repeat.set(3, 26);
     if(M.asphalt){ M.asphalt.map = t; M.asphalt.needsUpdate = true; }
-  }, undefined, function(){});
+  }, undefined, function(){}); */
   L.load('assets/env/pavement.jpg', function(t){
     t.encoding = THREE.sRGBEncoding;
     t.wrapS = t.wrapT = THREE.RepeatWrapping;
