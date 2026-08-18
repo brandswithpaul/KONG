@@ -226,12 +226,12 @@
     -webkit-overflow-scrolling:touch}
   #menuvid{display:none}
   /* Verläufe oben und unten, damit Wortmarke und Tafel auf jedem Bildausschnitt sitzen */
-  #menuscrim{position:absolute;inset:0;z-index:1;pointer-events:none;
+  #menuscrim{position:fixed;inset:0;z-index:1;pointer-events:none;
     background:
       linear-gradient(rgba(10,26,22,.55) 0%, rgba(10,26,22,.15) 20%, rgba(10,26,22,0) 38%),
       linear-gradient(rgba(8,20,17,0) 44%, rgba(8,20,17,.45) 66%, rgba(6,16,13,.80) 100%)}
 
-  .brokrain{position:absolute;top:0;bottom:0;width:18%;z-index:1;pointer-events:none;overflow:hidden}
+  .brokrain{position:fixed;top:0;bottom:0;width:18%;z-index:1;pointer-events:none;overflow:hidden}
   .brokrain.l{left:0} .brokrain.r{right:0}
   .brok{position:absolute;top:-14%;width:52px;opacity:.95;
     filter:drop-shadow(0 3px 0 rgba(12,28,22,.5));animation:fall linear infinite}
@@ -241,7 +241,7 @@
   #menuinner{position:relative;z-index:2;min-height:100%;
     display:flex;flex-direction:column;align-items:center;
     justify-content:space-between;
-    gap:0;padding:clamp(16px,3.4vh,30px) 18px clamp(14px,3vh,26px);text-align:center}
+    gap:clamp(10px,2vh,22px);padding:clamp(20px,4vh,40px) 22px clamp(20px,4vh,36px);text-align:center}
 
   #menuTop{display:flex;flex-direction:column;align-items:center;gap:2px}
 
@@ -268,8 +268,15 @@
   #menu .best{font-family:var(--klein);font-weight:700;font-size:10px;
     letter-spacing:.24em;text-transform:uppercase;margin:0;color:var(--lime);
     text-shadow:0 2px 0 rgba(8,20,16,.9)}
+  /* Reiter direkt ueber der Liste: Tagesbeste und Gesamtbeste sind zwei
+     verschiedene Fragen, und am Stand will man beide sehen koennen. */
+  #menu .mtab{pointer-events:auto;cursor:pointer;margin:0;transform:none;
+    background:none;border:2px solid rgba(194,230,126,.4);border-radius:99px;
+    padding:4px 13px;font-family:var(--klein);font-weight:700;font-size:10px;
+    letter-spacing:.16em;text-transform:uppercase;color:#fdf8ea;opacity:.72}
+  #menu .mtab.aktiv{background:var(--lime);border-color:var(--lime);color:#16281f;opacity:1}
   #stamp{display:none}
-  #scoreCol{display:flex;flex-direction:column;align-items:center;flex:1 1 380px;max-width:460px}
+  #scoreCol{display:flex;flex-direction:column;align-items:center;flex:1 1 280px;max-width:460px}
   #menu #scoreCol{width:100%;
     background:rgba(14,30,25,.86);border:3px solid var(--lime);border-radius:20px;
     padding:14px 16px;backdrop-filter:blur(4px);
@@ -299,7 +306,7 @@
   #menu #menuScores .srow.leer{opacity:.6}
   #menu #menuScores .sdet{font-size:8.5px;opacity:.5;padding:0 0 3px 3.3em;letter-spacing:.05em}
 
-  #menu .fieldbox{flex:1 1 340px;max-width:420px;margin:0;padding:0;
+  #menu .fieldbox{flex:1 1 260px;max-width:420px;margin:0;padding:0;
     background:none;border:none;display:flex;flex-direction:column;gap:9px}
   #menu .fieldbox .siglabel{font-family:var(--klein);font-size:9px;letter-spacing:.22em;margin-top:2px;
     text-transform:uppercase;color:var(--lime);font-weight:700;
@@ -334,11 +341,10 @@
 
   /* Steuerung als Tastenbild statt als Satz: eine Kappe je Taste, daneben die
      Funktion. Turbo und Kanone stehen nicht mehr da — sie zuenden von allein. */
-  #menu .tasten{display:flex;flex-direction:column;align-items:center;gap:7px;margin-top:12px}
-  #menu .treihe{display:flex;align-items:center;gap:7px;
-    font-family:var(--klein);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
-    color:#fdf8ea;opacity:.86;text-shadow:0 2px 0 rgba(8,20,16,.9)}
-  #menu .treihe em{font-style:normal;opacity:.8}
+  #menu .tasten{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:14px}
+  #menu .treihe{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+  #menu .tlegende{font-family:var(--klein);font-size:10px;letter-spacing:.14em;
+    text-transform:uppercase;color:#fdf8ea;opacity:.8;text-shadow:0 2px 0 rgba(8,20,16,.9)}
   #menu .keycap{display:inline-flex;align-items:center;justify-content:center;
     min-width:26px;height:26px;padding:0 7px;border:2px solid var(--lime);border-radius:7px;
     background:rgba(12,26,20,.4);color:var(--lime);font-size:11px;font-weight:700;
@@ -365,7 +371,7 @@
     background:var(--lime);color:#16281f;font-family:var(--klein);
     font-size:10px;font-weight:700;letter-spacing:.1em}
 
-  @media (max-width:700px){
+  @media (max-width:560px){
     #menu{background-position:center 38%}
     #menuBottom{flex-direction:column;align-items:center;gap:12px}
     #menu .fieldbox{width:min(320px,88vw);max-width:none}
@@ -651,7 +657,10 @@
 
     <div id="menuBottom">
       <div id="scoreCol">
-        <div id="bestRow"><div class="best" id="bestLine">Tagesbeste Kuriere</div></div>
+        <div id="bestRow">
+          <button class="mtab aktiv" id="mtabHeute">Heute</button>
+          <button class="mtab" id="mtabAlle">Alle Zeiten</button>
+        </div>
         <div id="menuScores"></div>
       </div>
       <div class="fieldbox">
@@ -668,24 +677,23 @@
         <div class="tasten" id="ctrlKeys">
           <div class="treihe">
             <span class="keycap">&#9664;</span><span class="keycap">&#9654;</span>
-            <em>Lenken</em>
+            <span class="keycap">&#9650;</span><span class="keycap">&#9660;</span>
+            <span class="keycap breit">Leertaste</span>
           </div>
-          <div class="treihe">
-            <span class="keycap">&#9650;</span><em>Gas</em>
-            <span class="keycap">&#9660;</span><em>Bremse</em>
-          </div>
-          <div class="treihe">
-            <span class="keycap breit">Leertaste</span><em>Springen &amp; Liefern</em>
-          </div>
+          <div class="tlegende">Lenken · Gas · Bremse · Springen &amp; Liefern</div>
         </div>
         <div class="tasten" id="ctrlTouch" hidden>
-          <div class="treihe"><span class="keycap breit">Wischen</span><em>Lenken</em></div>
-          <div class="treihe"><span class="keycap breit">Tippen</span><em>Springen &amp; Liefern</em></div>
+          <div class="treihe">
+            <span class="keycap breit">Wischen</span><span class="keycap breit">Tippen</span>
+          </div>
+          <div class="tlegende">Lenken · Springen &amp; Liefern</div>
         </div>
         <div class="tasten" id="ctrlPad" hidden>
-          <div class="treihe"><span class="keycap breit">Stick</span><em>Lenken</em></div>
-          <div class="treihe"><span class="keycap">R2</span><em>Gas</em><span class="keycap">L2</span><em>Bremse</em></div>
-          <div class="treihe"><span class="keycap">&#10005;</span><em>Springen &amp; Liefern</em></div>
+          <div class="treihe">
+            <span class="keycap breit">Stick</span><span class="keycap">R2</span>
+            <span class="keycap">L2</span><span class="keycap">&#10005;</span>
+          </div>
+          <div class="tlegende">Lenken · Gas · Bremse · Springen &amp; Liefern</div>
         </div>
         <div id="padHint" hidden>Controller verbunden — <b>✕</b> oder <b>Options</b></div>
         <div id="tonHinweis" hidden>Für Ton einmal ins Bild klicken</div>
@@ -3345,20 +3353,23 @@ function spawnCurb(){
   const houseZ = (zStart+zEnd)/2;
   // Trapez statt Rechteck: oben dreimal so breit wie unten. Ein gleich breiter
   // Balken liest sich als Wand, ein sich öffnender Strahl als Licht.
-  const saeuleGeo = new THREE.PlaneGeometry(1.6, 34, 1, 1);
+  // Deutlich zurueckgenommen: die Saeule stand als heller Keil am Fluchtpunkt
+  // und hat die halbe Strasse ueberstrahlt. Kuerzer, schmaler, blasser — sie
+  // soll die Zone ankuendigen, nicht das Bild bestimmen.
+  const saeuleGeo = new THREE.PlaneGeometry(1.2, 22, 1, 1);
   (function(){
     const pos = saeuleGeo.attributes.position;
     for(let i = 0; i < pos.count; i++){
-      if(pos.getY(i) > 0) pos.setX(i, pos.getX(i) * 3.4);   // obere Kante aufziehen
+      if(pos.getY(i) > 0) pos.setX(i, pos.getX(i) * 2.2);   // obere Kante aufziehen
     }
     pos.needsUpdate = true;
   })();
   const saeule = new THREE.Mesh(saeuleGeo, new THREE.MeshBasicMaterial({
-    map: strahlTex, color: new THREE.Color(0xc2e67e).multiplyScalar(2.0),
-    transparent: true, opacity: 0.55, depthWrite: false,
+    map: strahlTex, color: new THREE.Color(0xc2e67e).multiplyScalar(1.15),
+    transparent: true, opacity: 0.26, depthWrite: false,
     blending: THREE.AdditiveBlending, toneMapped: false, fog: false,
     side: THREE.DoubleSide}));
-  saeule.position.set(12.2, 17, houseZ);
+  saeule.position.set(12.2, 11, houseZ);
   g.add(saeule);
   // Anflug-Pfeile auf der Fahrbahn, 15/30/45 m vor der Zone
   const anflug = [];
@@ -4605,10 +4616,13 @@ function heuteAb(){
   const d = new Date(); d.setHours(0, 0, 0, 0);
   return d.toISOString();
 }
+// 'heute' oder 'alle' — der Startbildschirm merkt sich die Wahl fuer die Sitzung.
+var MENU_MODUS = 'heute';
 function sbFetchTop(cb){
   try{
+    const ab = MENU_MODUS === 'alle' ? SEASON_START : heuteAb();
     fetch(SB_URL + '/rest/v1/getkong_scores?select=name,dist,deliveries,level'
-      + '&created_at=gte.' + encodeURIComponent(heuteAb()) + '&order=dist.desc&limit=200', {
+      + '&created_at=gte.' + encodeURIComponent(ab) + '&order=dist.desc&limit=200', {
       headers: { apikey: SB_KEY }
     }).then(function(r){ return r.ok ? r.json() : Promise.reject(r.status); })
       .then(function(list){
@@ -4860,8 +4874,30 @@ function renderScores(top, entry){
   el('scores').innerHTML = '<div class="stitle">Bestenliste</div>' + rows;
 }
 function updateBestLine(){
-  // Überschrift der Liste — bleibt konstant, damit der Zettel nie kopflos wirkt
-  el('bestLine').textContent = 'Tagesbeste Kuriere';
+  // Die Ueberschrift ist jetzt der aktive Reiter
+  const h = el('mtabHeute'), a = el('mtabAlle');
+  if(h) h.classList.toggle('aktiv', MENU_MODUS === 'heute');
+  if(a) a.classList.toggle('aktiv', MENU_MODUS === 'alle');
+}
+// Reiter umschalten und neu laden. Ist "heute" noch leer, springt die Anzeige
+// beim ersten Laden von allein auf "Alle Zeiten" — eine leere Tafel am Stand
+// sieht aus, als waere die Bestenliste kaputt.
+var menuFallbackGeprueft = false;
+function menuModus(m, cb){
+  MENU_MODUS = m;
+  updateBestLine();
+  el('menuScores').innerHTML = '';
+  sbFetchTop(function(list){
+    if(!menuFallbackGeprueft && m === 'heute' && (!list || !list.length)){
+      menuFallbackGeprueft = true;
+      menuModus('alle');
+      return;
+    }
+    menuFallbackGeprueft = true;
+    updateBestLine();
+    renderMenuScores(list);
+    if(cb) cb(list);
+  });
 }
 
 // ---------- Leben: drei Brokkolis ----------
@@ -4903,8 +4939,10 @@ function brokkoliIconBauen(modell){
     r.render(sc, cam);
     BROK_BILD = r.domElement.toDataURL('image/png');
     r.dispose();
-    // Bereits gezeichnete Anzeigen nachziehen
+    // Bereits gezeichnete Anzeigen nachziehen — auch den Regen im Menue, der
+    // beim Laden noch das flache Sprite-Icon benutzt hat.
     for(const img of document.querySelectorAll('.lifeIcon')) img.src = BROK_BILD;
+    for(const img of document.querySelectorAll('.brok img')) img.src = BROK_BILD;
   }catch(e){}
 }
 
@@ -6144,7 +6182,7 @@ function update(dt){
       if(c.kanten) for(const k of c.kanten) k.material.opacity = kantenWert;
       // Lichtsäule pulst langsam und dreht zur Kamera
       if(c.saeule){
-        c.saeule.material.opacity = 0.42 + 0.16 * Math.sin(jetzt*0.0022);
+        c.saeule.material.opacity = 0.20 + 0.07 * Math.sin(jetzt*0.0022);
         c.saeule.rotation.y = Math.atan2(S.x - c.saeule.position.x, S.z - c.saeule.position.z);
       }
       // Anflug-Pfeile blinken nacheinander in Fahrtrichtung
@@ -6170,7 +6208,7 @@ function update(dt){
       // (Säule, Takt, Anflug) verlöschen. Vorher blieb ein graugrüner Rest.
       if(c.zone) c.zone.material.opacity = 0.86 + f * 0.12;
       if(c.kanten) for(const k of c.kanten) k.material.opacity = 0.10 + f * 0.35;
-      if(c.saeule) c.saeule.material.opacity = f * 0.5;
+      if(c.saeule) c.saeule.material.opacity = f * 0.22;
       if(c.takte) for(const bal of c.takte) bal.material.opacity = f;
       if(c.anflug) for(const a of c.anflug) a.material.opacity = f * 0.3;
       if(c.sweet) c.sweet.material.opacity = f * 0.3;
@@ -6429,7 +6467,9 @@ updateBestLine();
 // Tafel sofort mit Platzhaltern zeichnen — sonst bleibt sie leer,
 // solange oder falls die Bestenliste nicht antwortet.
 renderMenuScores(null);
-sbFetchTop(function(list){ updateBestLine(); renderMenuScores(list); });
+menuModus('heute');
+el('mtabHeute').addEventListener('click', function(e){ e.stopPropagation(); menuModus('heute'); });
+el('mtabAlle').addEventListener('click', function(e){ e.stopPropagation(); menuModus('alle'); });
 kontakteSenden();   // Reste aus Laeufen ohne Netz nachreichen
 applyOverlayPattern();
 el('nameInput').value = localStorage.getItem('getkong-name') || '';
