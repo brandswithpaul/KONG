@@ -1116,7 +1116,11 @@ const M = {
   curb: new THREE.MeshLambertMaterial({color:0x9aa088}),
   lime: new THREE.MeshLambertMaterial({color:0xc2e67e, emissive:0x5a7a1e}),
   limeGlow: new THREE.MeshBasicMaterial({color:0xd8ff90}), // hell genug für Bloom-Glow
-  dash: new THREE.MeshBasicMaterial({color:0xd8dcc8}),
+  // Fahrbahnmarkierung: Lambert statt Basic. Basic kennt kein Licht — die
+  // Striche und Zebrastreifen blieben deshalb voll hell, waehrend der Asphalt
+  // um sie herum im Schatten lag. Aus der Ferne las sich das als weisse
+  // Flaechen auf der Strasse. Jetzt liegen sie im selben Licht wie der Belag.
+  dash: new THREE.MeshLambertMaterial({color:0xc9cdba}),
   building: [0xd6cfb6, 0xc9c2a8, 0xb2b896, 0xa4ad8c, 0xb08a72, 0x8c9aa0, 0xc4a88a, 0x8f8977].map(c=>{ // Altbau-Fassaden mit Fenster-Textur
     const face = new THREE.MeshLambertMaterial({color:c, map:facadeTex});
     const plain = new THREE.MeshLambertMaterial({color:c});
@@ -2971,7 +2975,7 @@ function decorateChunk(ch){
     const zz = -CFG.chunkLen/2 + Math.random()*CFG.chunkLen;
     for(let sx=-4.8; sx<=4.8; sx+=1.2){
       const stripe = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 3.2), M.dash);
-      stripe.rotation.x = -Math.PI/2;
+      stripe.rotation.x = -Math.PI/2; stripe.receiveShadow = true;
       stripe.position.set(sx, 0.017, zz);
       ch.group.add(stripe); ch.deco.push(stripe);
     }
@@ -3082,7 +3086,7 @@ function buildChunks(){
     for(const lx of [-1.8, 1.8]){
       for(let d=0; d<CFG.chunkLen; d+=8){
         const dash = new THREE.Mesh(new THREE.PlaneGeometry(0.14, 2.6), M.dash);
-        dash.rotation.x = -Math.PI/2;
+        dash.rotation.x = -Math.PI/2; dash.receiveShadow = true;
         dash.position.set(lx, 0.015, -CFG.chunkLen/2 + d + 4);
         group.add(dash);
       }
