@@ -188,6 +188,31 @@
   #flash{position:fixed;inset:0;pointer-events:none;background:var(--lime);opacity:0;z-index:9}
   #lvl{font-size:clamp(14px,2.6vw,18px)}
   #hudlogo{position:absolute;top:20px;left:50%;transform:translateX(-50%);width:clamp(90px,14vw,140px);opacity:.9}
+  /* Einführung: sitzt mittig unten, wo beim Fahren ohnehin niemand hinschaut,
+     und ist trotzdem groß genug, um aus zwei Metern Abstand lesbar zu sein. */
+  #tutBox{position:absolute;z-index:8;left:50%;bottom:clamp(90px,16vh,150px);transform:translateX(-50%);
+    display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;
+    background:rgba(14,30,25,.9);border:3px solid var(--lime);border-radius:20px;
+    padding:clamp(12px,1.8vh,20px) clamp(18px,3vw,34px);max-width:min(560px,92vw);
+    box-shadow:0 0 0 3px rgba(12,26,21,.7),0 0 40px rgba(194,230,126,.45);
+    backdrop-filter:blur(4px)}
+  #tutBox[hidden]{display:none}
+  #tutBox.gut{border-color:#9bef3a;background:rgba(30,66,24,.92)}
+  #tutFortschritt{font-family:var(--klein);font-size:10px;letter-spacing:.3em;
+    color:var(--lime);opacity:.7}
+  #tutTitel{font-family:var(--font);font-weight:900;font-style:italic;text-transform:uppercase;
+    font-size:clamp(22px,4vw,38px);line-height:1;letter-spacing:.04em;
+    -webkit-text-stroke:3px #16281f;paint-order:stroke fill}
+  #tutTasten{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;min-height:0}
+  #tutTasten:empty{display:none}
+  #tutTasten .keycap{display:inline-flex;align-items:center;justify-content:center;
+    min-width:34px;height:34px;padding:0 10px;border:2px solid var(--lime);border-radius:9px;
+    background:rgba(12,26,20,.5);color:var(--lime);font-family:var(--klein);
+    font-size:14px;font-weight:700;box-shadow:0 0 14px rgba(194,230,126,.3)}
+  #tutTasten .keycap.breit{min-width:110px;font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+  #tutTasten .plus{display:flex;align-items:center;color:var(--lime);opacity:.7;font-size:16px}
+  #tutText{font-family:var(--klein);font-size:clamp(12px,1.6vw,16px);line-height:1.45;
+    color:#fdf8ea;opacity:.9;max-width:44ch}
   #xpwrap{width:min(150px,26vw);height:6px;background:rgba(245,242,232,.18);border-radius:99px;overflow:hidden}
   #xpbar{height:100%;width:0%;background:var(--lime);border-radius:99px;transition:width .2s}
   #dels{font-size:clamp(11px,2vw,14px)}
@@ -339,6 +364,9 @@
   #menu #qrHinweis{font-family:var(--klein);font-size:10.5px;letter-spacing:.06em;
     text-align:center;color:#fdf8ea;opacity:.6;margin-top:2px}
   #menu #qrHinweis b{color:var(--lime);opacity:.95}
+  #menu #tutBtn{background:none;color:var(--lime);border:2px solid rgba(194,230,126,.5);
+    font-size:13px;letter-spacing:.16em;padding:.6em 1em;margin-top:2px;box-shadow:none}
+  #menu #tutBtn:hover{background:rgba(194,230,126,.12)}
   @keyframes errshake2{0%,100%{transform:translateX(0)}
     25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
 
@@ -592,6 +620,12 @@
 
 <div id="hud">
   <img id="hudlogo" alt="">
+  <div id="tutBox" hidden>
+    <div id="tutFortschritt"></div>
+    <div id="tutTitel"></div>
+    <div id="tutTasten"></div>
+    <div id="tutText"></div>
+  </div>
   <div class="corner" id="cTL">
     <div class="hudline" id="namezeile">
       <svg class="hicon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
@@ -682,6 +716,7 @@
         <div id="codeStatus"></div>
         <button class="btn" id="startBtn">Let's Go</button>
         <div id="qrHinweis">Noch keinen Code? <b>QR am Stand scannen</b></div>
+        <button class="btn zweit" id="tutBtn">Wie geht das?</button>
         <!-- Kontaktdaten und Einwilligung stehen jetzt auf register.html. Die
              Felder bleiben verborgen im Baum, weil startGame() sie weiter liest. -->
         <input id="realInput" type="hidden" value="">
@@ -858,6 +893,8 @@ const S = {
   carTimer: 1, pedTimer: 2,
   nextCurbZ: -160, curbs: [],
   hintShown: false,
+  tut: null,               // {schritt, t, erledigt} — geführte Einführung
+
 };
 const keys = {};
 
@@ -5224,6 +5261,110 @@ function resetGame(){
   for(let i=0;i<7;i++) spawnCar(50 + i*45 + Math.random()*25);
   spawnPed(); spawnPed();
 }
+// ---------- Einführung ----------
+// Am Stand steht alle zwei Minuten jemand Neues vor dem Gerät, der noch nie
+// einen Endless Runner gespielt hat. Die Einführung läuft deshalb im Spiel,
+// nicht als Textwand davor: kein Verkehr, keine Baustellen, unendlich Leben —
+// und sie geht erst weiter, wenn die Aktion wirklich ausgeführt wurde.
+const TUT_SCHRITTE = [
+  { id: 'lenken',  titel: 'Lenken', text: 'Links und rechts',
+    tasten: ['◀', '▶'], lob: 'Sitzt.',
+    pruef: function(st, b){ return st.gelenkt - b.gelenkt > 0.7; } },
+  { id: 'springen', titel: 'Springen', text: 'Leertaste',
+    tasten: ['Leertaste'], lob: 'Genau so — damit kommst du über Autos.',
+    pruef: function(st, b){ return st.spruenge - b.spruenge >= 1; } },
+  { id: 'doppel',  titel: 'Doppelsprung', text: 'In der Luft nochmal — gibt einen 360',
+    tasten: ['Leertaste', '+', 'Leertaste'], lob: 'Der 360 zählt auf den Multiplikator.',
+    pruef: function(st, b){ return st.tricks - b.tricks >= 1; } },
+  { id: 'brokkoli', titel: 'Brokkoli', text: 'Einsammeln — füllt den Turbo, hebt den Multiplikator',
+    tasten: [], lob: 'Turbo voll = Speed. Drei Lieferungen am Stück = Kanone, die schießt von allein.',
+    pruef: function(st, b){ return st.brokkoli - b.brokkoli >= 1; } },
+  { id: 'zone',    titel: 'Lieferzone', text: 'Rechts auf den grünen Streifen, dort Leertaste',
+    tasten: ['▶', 'Leertaste'], lob: 'Das bringt die dicksten Punkte.',
+    pruef: function(st, b){ return st.lieferungen - b.lieferungen >= 1; } }
+];
+
+function tutStart(){
+  S.tut = { i: 0, t: 0, gelenkt: 0, spruenge: 0, tricks: 0, brokkoli: 0, lieferungen: 0, fertig: 0 };
+  // Der Spielstart setzt sieben Autos auf die Strecke, bevor die Einführung
+  // greift — die müssen weg, sonst lernt niemand lenken, sondern stirbt.
+  for(const c of cars) scene.remove(c.g);
+  cars.length = 0;
+  tutZeigen();
+  const box = el('tutBox'); if(box) box.hidden = false;
+}
+function tutZeigen(){
+  const t = S.tut; if(!t) return;
+  const sch = TUT_SCHRITTE[t.i]; if(!sch) return;
+  // Jeder Schritt zählt ab seinem eigenen Beginn. Ohne das gilt ein Sprung aus
+  // dem Lenk-Schritt schon als erledigter Sprung-Schritt, und die Einführung
+  // rauscht an dem vorbei, was sie zeigen soll.
+  t.basis = { gelenkt: t.gelenkt, spruenge: t.spruenge, tricks: t.tricks,
+              brokkoli: t.brokkoli, lieferungen: t.lieferungen };
+  el('tutTitel').textContent = sch.titel;
+  el('tutText').textContent = sch.text;
+  el('tutTasten').innerHTML = sch.tasten.map(function(k){
+    if(k === '+') return '<span class="plus">+</span>';
+    return '<span class="keycap' + (k.length > 2 ? ' breit' : '') + '">' + k + '</span>';
+  }).join('');
+  el('tutFortschritt').textContent = (t.i + 1) + ' / ' + TUT_SCHRITTE.length;
+}
+function tutUpdate(dt){
+  const t = S.tut; if(!t) return;
+  t.t += dt;
+
+  // Ruhe auf der Strecke: was ablenkt oder tötet, wird zurückgehalten.
+  S.carTimer = 4; S.pedTimer = 4;
+  nextSiteZ = S.z - 900; nextKuebelZ = S.z - 900;
+  S.lives = Math.max(S.lives, 3);
+
+  const sch = TUT_SCHRITTE[t.i];
+  if(!sch) return;
+
+  // Für den Brokkoli-Schritt einen direkt in den Weg legen, statt zu hoffen,
+  // dass zufällig einer kommt.
+  if(sch.id === 'brokkoli' && !t.gelegt){
+    t.gelegt = true;
+    for(let i = 0; i < 3; i++) spawnCoin(S.x, S.z - 45 - i * 4);
+  }
+  // Dasselbe für die Lieferzone.
+  if(sch.id === 'zone' && !t.zoneGelegt){
+    t.zoneGelegt = true;
+    if(!S.curbs.some(function(c){ return !c.used && c.zStart < S.z && c.zStart > S.z - 160; })){
+      S.nextCurbZ = S.z - 70;
+    }
+  }
+
+  if(t.fertig > 0){
+    // Nur so lange stehen lassen, dass man das Häkchen sieht — bei einer
+    // Schlange am Stand zählt jede Sekunde.
+    t.fertig -= dt;
+    if(t.fertig <= 0){
+      t.i++;
+      el('tutBox').classList.remove('gut');
+      if(t.i >= TUT_SCHRITTE.length){
+        S.tut = null;
+        el('tutBox').hidden = true;
+        showToast('Alles klar.', 'Ab jetzt zählt jeder Meter');
+        try{ localStorage.setItem('gk_tutorial', '1'); }catch(e){}
+        return;
+      }
+      tutZeigen();
+    }
+    return;
+  }
+
+  if(sch.pruef(t, t.basis || t)){
+    // Der Brokkoli-Schritt erklärt noch die Folgen (Turbo, Kanone) und darf
+    // deshalb einen Tick länger stehen als die anderen.
+    t.fertig = sch.id === 'brokkoli' ? 2.2 : 0.9;
+    el('tutBox').classList.add('gut');
+    el('tutTitel').textContent = sch.titel + ' ✓';
+    el('tutTasten').innerHTML = '';
+    el('tutText').textContent = sch.lob || 'Sitzt.';
+  }
+}
+
 // ---------- Spielcode einloesen ----------
 // Vier Ziffern kommen von register.html. Alles andere wird als Username
 // genommen — faellt das Backend aus, kann man am Stand trotzdem sofort fahren.
@@ -5347,8 +5488,17 @@ function startGame(){
   startAmbience(); startVerkehrLoop();
   initRecordTracker();
   sbFetchTop(function(list){ if(list && S.mode !== 'menu') initRecordTracker(); });
-  startSequenz(function(){ S.mode = 'play'; });
+  startSequenz(function(){
+    S.mode = 'play';
+    // Beim allerersten Mal auf diesem Gerät läuft die Einführung mit. Wer sie
+    // kennt, sieht sie nie wieder — am Stand spielt aber fast jeder zum ersten
+    // Mal, deshalb ist sie die Voreinstellung und nicht der Sonderfall.
+    let kennt = false;
+    try{ kennt = localStorage.getItem('gk_tutorial') === '1'; }catch(e){}
+    if(!kennt || tutErzwungen){ tutErzwungen = false; tutStart(); }
+  });
 }
+var tutErzwungen = false;
 // Vibration, wo das Pad sie kann (Chrome: vibrationActuator)
 function rumble(dauer, stark, schwach){
   try{
@@ -5407,6 +5557,8 @@ function sbRang(score, cb){
 
 function schichtEnde(){
   S.mode = 'over';
+  S.tut = null;
+  const tb = el('tutBox'); if(tb) tb.hidden = true;
   S.bestRun = Math.max(S.bestRun, S.score);
   const finale = S.bestRun;
   // Persönlicher Rekord überlebt den Tab — die Bestenliste zeigt ihn im Leerstand
@@ -5641,6 +5793,7 @@ function manageCoins(dt){
       brokkoliBurst(cp.x, cp.y, cp.z);   // Effekt in Brokkoli-Form, nicht rund
       scene.remove(c.g); coins.splice(i,1);
       S.coins++; addXP(10); bumpMult(); chargeTurbo(8); sfxCoin();
+      if(S.tut) S.tut.brokkoli++;
       stauchen(0.18);
     }
   }
@@ -5851,12 +6004,16 @@ function manageShots(dt){
 
 // ---------- Delivery: erst Wurf nach rechts, dann Mega-Sprung ----------
 function showToast(main, sub){
+  // Während der Einführung hat die Karte Vorrang. Die Toasts legten sich sonst
+  // genau darüber und man las beides nicht.
+  if(S.tut) return;
   ui.toast.querySelector('.pill').innerHTML = main;
   ui.toast.querySelector('.sub').textContent = sub;
   ui.toast.classList.remove('show'); void ui.toast.offsetWidth;
   ui.toast.classList.add('show');
 }
 function deliver(curb){
+  if(S.tut) S.tut.lieferungen++;
   curb.used = true;
   curb.flash = 1;            // Zone quittiert die Lieferung und erlischt dann
   if(curb.zone) curb.zone.material.opacity = 0.07;
@@ -5925,12 +6082,14 @@ function jumpPressed(){
     deliver(curb);
   } else if(S.grounded){
     S.vy = CFG.hopV * turboJumpMult(); S.grounded = false; sfxHop();
+    if(S.tut) S.tut.spruenge++;
   } else if(!S.trick){
     // Doppelsprung in der Luft: deutlich höher anschwingen + 360 — hoch genug für Autodächer
     const jm = turboJumpMult();
     S.vy = Math.max(S.vy, 0) + 4.6 * jm;
     S.trick = {t:0, dur:0.95};
     S.tricks = (S.tricks || 0) + 1;
+    if(S.tut) S.tut.tricks++;
     bumpMult();
     sfxHop(); tone(520, 0.05, 0.25, 'triangle', 0.1);
     showToast('360.', 'Multiplikator ×' + S.mult.toFixed(1).replace('.', ','));
@@ -6226,6 +6385,9 @@ function update(dt){
   else if(!steer) steer = (gp.right?1:0) - (gp.left?1:0);
   // Im Mega-Sprung darf gelenkt werden — sonst sind das zwei Sekunden Zuschauen
   S.x += steer * CFG.steerSpeed * (S.leap ? 0.75 : 1) * dt;
+  // Für die Einführung: gefahrene Seitwärtsstrecke, nicht bloß "Taste gedrückt".
+  // So zählt nur echtes Lenken, nicht ein versehentlicher Tastendruck.
+  if(S.tut && steer) S.tut.gelenkt += Math.abs(steer) * dt;
   const maxX = (curb || S.leap) ? CFG.curbXmax - 0.5 : CFG.roadHalf - 1.8;
   const minX = -CFG.roadHalf + 1.8;
   if(S.x > maxX) S.x += (maxX - S.x) * Math.min(1, dt*8);
@@ -6416,6 +6578,7 @@ function update(dt){
   }
   manageCurbs();
   requisitenAusduennen();
+  if(S.tut) tutUpdate(dt);
   // Zonen pulsieren + Chevrons laufen + Marker bounct, solange unbenutzt
   // E · Zustände: außerhalb ruhig, drin heller und schneller, danach erloschen.
   const jetzt = performance.now();
@@ -6765,6 +6928,14 @@ el('mtabHeute').addEventListener('click', function(e){ e.stopPropagation(); menu
 el('mtabAlle').addEventListener('click', function(e){ e.stopPropagation(); menuModus('alle'); });
 kontakteSenden();   // Reste aus Laeufen ohne Netz nachreichen
 applyOverlayPattern();
+(function(){
+  const b = el('tutBtn');
+  if(b) b.addEventListener('click', function(){
+    tutErzwungen = true;
+    if(!el('nameInput').value) el('nameInput').value = 'GAST';
+    startGame();
+  });
+})();
 el('nameInput').value = localStorage.getItem('getkong-name') || '';
 (function(){
   const inp = el('nameInput');
@@ -6793,7 +6964,7 @@ fernAbdunkeln(M.dash,     30, 130, 0.38);
 // Versionsstempel. Ohne den laesst sich nicht unterscheiden, ob eine Aenderung
 // nicht wirkt oder ob der Browser noch die alte Datei aus dem Cache zeigt —
 // GitHub Pages liefert index.html mit max-age=600 aus.
-const BUILD = 'B18 · 19.08. 03:35';
+const BUILD = 'B20 · 19.08. 04:30';
 window.BUILD = BUILD;
 (function(){ const f = el('buildStempel'); if(f) f.textContent = ' · ' + BUILD; })();
 // ---------- Diagnose-Schalter (?debug=1) ----------
