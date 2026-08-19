@@ -332,6 +332,13 @@
   #menu #nameInput:focus, #menu #realInput:focus, #menu #mailInput:focus{
     background:rgba(194,230,126,.12);box-shadow:0 0 0 4px rgba(194,230,126,.35)}
   #menu #nameInput.err{border-color:#c0432f;animation:errshake2 .3s}
+  #menu #codeStatus{font-family:var(--klein);font-size:11px;letter-spacing:.06em;
+    min-height:1.2em;color:var(--lime);opacity:.9;text-align:center}
+  #menu #codeStatus.warte{opacity:.55}
+  #menu #codeStatus.fehler{color:#ffb59c}
+  #menu #qrHinweis{font-family:var(--klein);font-size:10.5px;letter-spacing:.06em;
+    text-align:center;color:#fdf8ea;opacity:.6;margin-top:2px}
+  #menu #qrHinweis b{color:var(--lime);opacity:.95}
   @keyframes errshake2{0%,100%{transform:translateX(0)}
     25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
 
@@ -670,16 +677,19 @@
         <div id="menuScores"></div>
       </div>
       <div class="fieldbox">
-        <input id="nameInput" maxlength="14" placeholder="Username" autocomplete="off" spellcheck="false">
-        <input id="realInput" maxlength="40" placeholder="Vorname Nachname"
-               autocomplete="name" spellcheck="false">
-        <input id="mailInput" type="email" maxlength="60" placeholder="E-Mail-Adresse"
-               autocomplete="email" spellcheck="false" inputmode="email">
-        <label class="dsgvo" id="dsgvoZeile">
-          <input type="checkbox" id="dsgvoOk">
+        <input id="nameInput" maxlength="14" placeholder="Code oder Username"
+               autocomplete="off" spellcheck="false" inputmode="text">
+        <div id="codeStatus"></div>
+        <button class="btn" id="startBtn">Let's Go</button>
+        <div id="qrHinweis">Noch keinen Code? <b>QR am Stand scannen</b></div>
+        <!-- Kontaktdaten und Einwilligung stehen jetzt auf register.html. Die
+             Felder bleiben verborgen im Baum, weil startGame() sie weiter liest. -->
+        <input id="realInput" type="hidden" value="">
+        <input id="mailInput" type="hidden" value="">
+        <label class="dsgvo" id="dsgvoZeile" hidden>
+          <input type="checkbox" id="dsgvoOk" checked>
           <span>Ich akzeptiere die Datenschutzbedingungen</span>
         </label>
-        <button class="btn" id="startBtn">Let's Go</button>
         <div class="tasten" id="ctrlKeys">
           <div class="treihe">
             <span class="keycap">&#9664;</span><span class="keycap">&#9654;</span>
@@ -5212,10 +5222,59 @@ function resetGame(){
   for(let i=0;i<7;i++) spawnCar(50 + i*45 + Math.random()*25);
   spawnPed(); spawnPed();
 }
+// ---------- Spielcode einloesen ----------
+// Vier Ziffern kommen von register.html. Alles andere wird als Username
+// genommen — faellt das Backend aus, kann man am Stand trotzdem sofort fahren.
+var codeName = null, codeLaeuft = false, codeZuletzt = '';
+function codeStatus(text, klasse){
+  const f = el('codeStatus');
+  if(!f) return;
+  f.textContent = text || '';
+  f.className = klasse || '';
+}
+function codePruefen(){
+  const inp = el('nameInput');
+  if(!inp) return;
+  const roh = (inp.value || '').trim();
+  const ziffern = roh.replace(/\D/g, '');
+  if(!(roh.length === 4 && ziffern.length === 4)){
+    codeName = null;
+    codeStatus(roh ? '' : '');
+    return;
+  }
+  if(ziffern === codeZuletzt || codeLaeuft) return;
+  codeZuletzt = ziffern;
+  codeLaeuft = true;
+  codeStatus('Code wird geprüft…', 'warte');
+  fetch(SB_URL + '/rest/v1/rpc/getkong_code_einloesen', {
+    method: 'POST',
+    headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_code: ziffern })
+  }).then(function(r){ return r.ok ? r.json() : Promise.reject(r.status); })
+    .then(function(liste){
+      codeLaeuft = false;
+      const t = liste && liste[0];
+      if(t && t.username){
+        codeName = t.username;
+        codeStatus('Willkommen, ' + t.username + '.', '');
+      } else {
+        codeName = null;
+        codeStatus('Code unbekannt — du kannst auch deinen Namen eintippen.', 'fehler');
+      }
+    })
+    .catch(function(){
+      codeLaeuft = false; codeName = null;
+      // Kein Netz: der eingetippte Wert gilt einfach als Name.
+      codeStatus('Keine Verbindung — es zählt, was hier steht.', 'fehler');
+    });
+}
 function startGame(){
   // Name ist Pflicht — kommt in die Bestenliste
   const inp = el('nameInput');
   let name = (inp.value || '').trim();
+  // Vier Ziffern sind ein Spielcode, kein Name — sonst stünde "4711" in der
+  // Bestenliste. Der aufgelöste Name gewinnt.
+  if(codeName && /^\d{4}$/.test(name)) name = codeName;
   if(!name) name = localStorage.getItem('getkong-name') || '';
   if(!name){
     inp.classList.remove('err'); void inp.offsetWidth;
@@ -6032,7 +6091,12 @@ addEventListener('gamepadconnected', function(e){
   setTimeout(tonHinweis, 50);
   // Ohne Tastatur am Stand: Name aus dem Speicher reicht zum Starten
   if(!el('nameInput').value){
-    try{ el('nameInput').value = localStorage.getItem('getkong-name') || ''; }catch(err){}
+    // Am Pad zaehlt der zuletzt benutzte Code, sonst der gemerkte Name.
+    try{
+      el('nameInput').value = localStorage.getItem('gk_code') ||
+                              localStorage.getItem('getkong-name') || '';
+      codePruefen();
+    }catch(err){}
   }
 });
 addEventListener('gamepaddisconnected', function(){
@@ -6697,6 +6761,17 @@ el('mtabAlle').addEventListener('click', function(e){ e.stopPropagation(); menuM
 kontakteSenden();   // Reste aus Laeufen ohne Netz nachreichen
 applyOverlayPattern();
 el('nameInput').value = localStorage.getItem('getkong-name') || '';
+(function(){
+  const inp = el('nameInput');
+  if(!inp) return;
+  inp.addEventListener('input', codePruefen);
+  // Wer sich auf demselben Gerät angemeldet hat, findet seinen Code schon drin.
+  try{
+    const merk = localStorage.getItem('gk_code');
+    if(merk && !inp.value){ inp.value = merk; codePruefen(); }
+  }catch(e){}
+  if(/^\d{4}$/.test(inp.value)) codePruefen();
+})();
 try{
   el('realInput').value = localStorage.getItem('getkong-real') || '';
   el('mailInput').value = localStorage.getItem('getkong-mail') || '';
@@ -6713,7 +6788,7 @@ fernAbdunkeln(M.dash,     30, 130, 0.38);
 // Versionsstempel. Ohne den laesst sich nicht unterscheiden, ob eine Aenderung
 // nicht wirkt oder ob der Browser noch die alte Datei aus dem Cache zeigt —
 // GitHub Pages liefert index.html mit max-age=600 aus.
-const BUILD = 'B14 · 19.08. 01:45';
+const BUILD = 'B15 · 19.08. 02:20';
 window.BUILD = BUILD;
 (function(){ const f = el('buildStempel'); if(f) f.textContent = ' · ' + BUILD; })();
 // ---------- Diagnose-Schalter (?debug=1) ----------
