@@ -96,7 +96,7 @@ const PLAETZE = 10;
 const el = id => document.getElementById(id);
 
 fetch('assets/qr-anmeldung.svg').then(r => r.text()).then(svg => { el('qrZiel').innerHTML = svg; })
-  .catch(() => { el('qrZiel').textContent = 'getkong.run'; });
+  .catch(() => { el('qrZiel').textContent = 'getkong.world'; });
 
 function heuteAb(){
   const d = new Date(); d.setHours(0, 0, 0, 0);
