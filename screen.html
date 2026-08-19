@@ -18,171 +18,137 @@
   body{min-height:100vh;background:var(--dark) url('assets/menu-strasse.jpg') center 45%/cover no-repeat;
     font-family:var(--klein);color:var(--paper);overflow:hidden}
   body::before{content:'';position:fixed;inset:0;background:linear-gradient(rgba(10,26,22,.78),rgba(8,20,17,.93))}
-  .raster{position:relative;height:100vh;display:grid;grid-template-columns:1.15fr .85fr;
-    gap:clamp(18px,2.4vw,38px);padding:clamp(18px,2.6vh,34px) clamp(20px,2.6vw,42px)}
+  .raster{position:relative;height:100vh;display:grid;grid-template-columns:1.25fr .75fr;
+    gap:clamp(18px,2.4vw,40px);padding:clamp(18px,2.6vh,34px) clamp(20px,2.6vw,44px)}
   .kopf{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:20px}
-  .kopf img{width:clamp(150px,15vw,240px)}
+  .kopf img{width:clamp(150px,15vw,250px)}
   .kopf .titel{font-family:var(--font);font-weight:900;font-style:italic;text-transform:uppercase;
-    font-size:clamp(20px,2.6vw,38px);letter-spacing:.2em;-webkit-text-stroke:3px #16281f;paint-order:stroke fill;
+    font-size:clamp(20px,2.8vw,42px);letter-spacing:.2em;-webkit-text-stroke:3px #16281f;paint-order:stroke fill;
     text-shadow:0 0 26px rgba(194,230,126,.5)}
-  .spalte{display:flex;flex-direction:column;gap:clamp(12px,1.6vh,22px);min-height:0}
-  .kasten{background:rgba(14,30,25,.88);border:3px solid var(--lime);border-radius:22px;
-    padding:clamp(14px,1.8vh,24px) clamp(16px,1.6vw,26px);
-    box-shadow:0 0 0 3px rgba(12,26,21,.7),0 0 40px rgba(194,230,126,.32)}
-  .kasten.dran{background:linear-gradient(160deg,rgba(48,92,30,.95),rgba(14,30,25,.92));
-    animation:puls 2.6s ease-in-out infinite}
-  @keyframes puls{0%,100%{box-shadow:0 0 0 3px rgba(12,26,21,.7),0 0 34px rgba(194,230,126,.3)}
-    50%{box-shadow:0 0 0 3px rgba(12,26,21,.7),0 0 66px rgba(194,230,126,.62)}}
-  .label{font-size:clamp(10px,1vw,13px);letter-spacing:.28em;text-transform:uppercase;
-    color:var(--lime);opacity:.9}
-  .dranName{font-family:var(--font);font-weight:900;font-style:italic;text-transform:uppercase;
-    font-size:clamp(38px,7vw,104px);line-height:1;letter-spacing:.02em;margin:6px 0 2px;
-    -webkit-text-stroke:4px #16281f;paint-order:stroke fill;text-shadow:0 0 40px rgba(194,230,126,.55);
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .dranCode{font-family:var(--font);font-weight:800;font-size:clamp(20px,2.6vw,40px);
-    letter-spacing:.24em;color:var(--lime)}
-  .dranHinweis{font-size:clamp(11px,1.1vw,15px);opacity:.75;margin-top:8px;line-height:1.5}
-  .liste{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:clamp(4px,.7vh,10px)}
-  .zeile{display:flex;align-items:baseline;gap:12px;font-size:clamp(13px,1.5vw,22px)}
-  .zeile .nr{width:2.2em;flex:none;color:var(--lime);font-weight:700;opacity:.8}
-  .zeile .nm{font-weight:600;letter-spacing:.06em;text-transform:uppercase;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .zeile .fill{flex:1;border-bottom:1px dotted rgba(253,248,234,.25);transform:translateY(-4px)}
-  .zeile .wartet{flex:none;opacity:.5;font-size:.8em;font-variant-numeric:tabular-nums}
-  .zeile.zurueck .nm::after{content:' · zurückgestellt';opacity:.55;font-size:.7em;letter-spacing:.1em}
+  .kasten{background:rgba(14,30,25,.88);border:3px solid var(--lime);border-radius:24px;
+    padding:clamp(16px,2vh,26px) clamp(18px,1.8vw,30px);min-height:0;
+    box-shadow:0 0 0 3px rgba(12,26,21,.7),0 0 42px rgba(194,230,126,.34)}
+  .tafel{display:flex;flex-direction:column}
+  .label{font-size:clamp(10px,1vw,14px);letter-spacing:.28em;text-transform:uppercase;
+    color:var(--lime);opacity:.9;margin-bottom:clamp(8px,1.4vh,16px)}
+  .liste{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:space-evenly;overflow:hidden}
+  .zeile{display:flex;align-items:baseline;gap:clamp(10px,1.2vw,18px);
+    font-size:clamp(15px,2.1vw,32px);font-variant-numeric:tabular-nums}
+  .zeile .rk{width:2.4em;flex:none;color:var(--lime);font-weight:700;opacity:.85}
+  .zeile .nm{font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:52%}
+  .zeile .fill{flex:1;border-bottom:2px dotted rgba(253,248,234,.22);transform:translateY(-.35em)}
+  .zeile .sc{flex:none;font-weight:700}
+  .zeile:first-child{color:var(--lime);text-shadow:0 0 22px rgba(194,230,126,.5)}
+  .zeile:first-child .nm{font-size:1.12em}
+  .zeile.leer{opacity:.35}
+  .spalte{display:flex;flex-direction:column;gap:clamp(14px,1.8vh,24px);min-height:0}
   .qrKasten{text-align:center}
-  .qrKasten svg{width:min(100%,320px);height:auto;background:#fdf8ea;border-radius:14px;padding:10px}
-  .qrText{margin-top:10px;font-size:clamp(11px,1.1vw,15px);line-height:1.5;opacity:.85}
+  .qrKasten svg{width:min(100%,300px);height:auto;background:#fdf8ea;border-radius:16px;padding:12px}
+  .qrText{margin-top:12px;font-size:clamp(12px,1.2vw,18px);line-height:1.55;opacity:.9}
   .qrText b{color:var(--lime)}
-  .steuerung{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-  .steuerung button{flex:1 1 auto;background:none;border:2px solid rgba(194,230,126,.5);
-    border-radius:12px;color:var(--paper);font-family:var(--klein);font-weight:700;
-    font-size:clamp(11px,1vw,14px);letter-spacing:.12em;text-transform:uppercase;
-    padding:.7em 1em;cursor:pointer}
-  .steuerung button:hover{background:rgba(194,230,126,.14)}
-  .steuerung button.weg{border-color:rgba(226,112,92,.6);color:#ffc3b4}
-  .status{margin-top:8px;font-size:clamp(10px,1vw,13px);opacity:.65;min-height:1.2em}
-  .leer{opacity:.6;font-size:clamp(13px,1.4vw,20px);line-height:1.6}
-  @media (max-width:900px){ .raster{grid-template-columns:1fr;overflow-y:auto} }
+  .schritte{font-size:clamp(11px,1.05vw,15px);line-height:1.9;opacity:.85;text-align:left}
+  .schritte span{display:inline-flex;align-items:center;justify-content:center;
+    width:1.7em;height:1.7em;margin-right:.6em;border-radius:99px;
+    background:var(--lime);color:#16281f;font-weight:700;font-size:.85em}
+  .fuss{position:absolute;left:0;right:0;bottom:6px;text-align:center;
+    font-size:10px;letter-spacing:.2em;text-transform:uppercase;opacity:.35}
+  @media (max-width:900px){.raster{grid-template-columns:1fr;overflow-y:auto;height:auto}}
 </style>
 </head>
 <body>
 <div class="raster">
   <div class="kopf">
     <img src="assets/getkong-logo-lime.svg" alt="GETKONG">
-    <div class="titel">Warteschlange</div>
+    <div class="titel" id="titel">Tagesbeste</div>
   </div>
 
-  <div class="spalte">
-    <div class="kasten dran" id="dranKasten">
-      <div class="label">Jetzt dran</div>
-      <div class="dranName" id="dranName">—</div>
-      <div class="dranCode" id="dranCode"></div>
-      <div class="dranHinweis" id="dranHinweis">Code am Spielgerät eingeben.</div>
-      <div class="steuerung" id="steuerung" hidden>
-        <button id="btnHinten">Nicht da → später</button>
-        <button id="btnSkip" class="weg">Streichen</button>
-      </div>
-      <div class="status" id="status"></div>
-    </div>
-
-    <div class="kasten" style="flex:1;min-height:0;display:flex;flex-direction:column">
-      <div class="label" style="margin-bottom:10px">Als Nächstes</div>
-      <div class="liste" id="liste"><div class="leer">Wird geladen…</div></div>
-    </div>
+  <div class="kasten tafel">
+    <div class="label" id="listenLabel">Beste Kuriere heute</div>
+    <div class="liste" id="liste"></div>
   </div>
 
   <div class="spalte">
     <div class="kasten qrKasten">
       <div class="label">Mitspielen</div>
-      <div id="qrZiel" style="margin-top:12px"></div>
-      <div class="qrText">
-        Scannen, anmelden, <b>Code</b> bekommen.<br>
-        Oder direkt: <b>getkong.run</b>
+      <div id="qrZiel"></div>
+      <div class="qrText">Scannen und anmelden</div>
+    </div>
+    <div class="kasten">
+      <div class="label">So geht's</div>
+      <div class="schritte">
+        <div><span>1</span>QR scannen, anmelden</div>
+        <div><span>2</span>Code aufs Handy bekommen</div>
+        <div><span>3</span>Code am Gerät eingeben</div>
+        <div><span>4</span>Fahren, liefern, oben landen</div>
       </div>
     </div>
   </div>
+  <div class="fuss" id="fuss"></div>
 </div>
 
-<script src="namensfilter.js"></script>
 <script>
 const SB_URL = 'https://iejuuattiqyymcbprxmu.supabase.co';
 const SB_KEY = 'sb_publishable_CGkLV2Y_A9cctjrhBckeEA_xRNfdWRU';
-// Der PIN steht in der Adresse, nicht im Code: ?pin=kong2026
-const PIN = new URLSearchParams(location.search).get('pin') || '';
+const SEASON_START = '2026-08-15T12:30:00Z';
+const PLAETZE = 10;
 
 const el = id => document.getElementById(id);
-let dran = null;
 
 fetch('assets/qr-anmeldung.svg').then(r => r.text()).then(svg => { el('qrZiel').innerHTML = svg; })
-  .catch(() => { el('qrZiel').textContent = 'QR fehlt'; });
+  .catch(() => { el('qrZiel').textContent = 'getkong.run'; });
 
-function minuten(seit){
-  const m = Math.round((Date.now() - new Date(seit).getTime()) / 60000);
-  return m < 1 ? 'gerade eben' : m + ' min';
+function heuteAb(){
+  const d = new Date(); d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
+// Ein Name, ein Platz — sonst belegt ein einzelner Spieler die halbe Tafel.
+function bestenProName(zeilen){
+  const beste = new Map();
+  for(const z of (zeilen || [])){
+    const k = (z.name || '—').trim().toUpperCase();
+    const alt = beste.get(k);
+    if(!alt || Number(z.dist || 0) > Number(alt.dist || 0)) beste.set(k, z);
+  }
+  return Array.from(beste.values()).sort((a, b) => Number(b.dist || 0) - Number(a.dist || 0));
 }
 
 function zeichnen(liste){
   const box = el('liste');
-  if(!liste || !liste.length){
-    dran = null;
-    el('dranName').textContent = 'Frei';
-    el('dranCode').textContent = '';
-    el('dranHinweis').textContent = 'Niemand wartet — direkt losspielen.';
-    el('steuerung').hidden = true;
-    box.innerHTML = '<div class="leer">Noch niemand angemeldet.<br>QR scannen und los.</div>';
-    return;
-  }
-  dran = liste[0];
-  el('dranName').textContent = dran.username;
-  el('dranCode').textContent = 'Code ' + dran.code;
-  el('dranHinweis').textContent = 'Code am Spielgerät eingeben — die Schlange rückt dann von allein nach.';
-  el('steuerung').hidden = !PIN;
-
-  box.innerHTML = liste.slice(1).map(function(e, i){
-    return '<div class="zeile' + (e.nach_hinten ? ' zurueck' : '') + '">' +
-      '<span class="nr">' + (i + 2) + '.</span>' +
-      '<span class="nm">' + e.username.replace(/</g, '&lt;') + '</span>' +
+  let html = '';
+  for(let i = 0; i < PLAETZE; i++){
+    const e = liste[i];
+    html += '<div class="zeile' + (e ? '' : ' leer') + '">' +
+      '<span class="rk">' + (i === 0 ? '🏆' : (i + 1) + '.') + '</span>' +
+      '<span class="nm">' + (e ? String(e.name || '—').replace(/</g, '&lt;') : '— — —') + '</span>' +
       '<span class="fill"></span>' +
-      '<span class="wartet">' + minuten(e.wartet_seit) + '</span></div>';
-  }).join('') || '<div class="leer">Sonst wartet niemand.</div>';
+      '<span class="sc">' + (e ? Number(e.dist || 0).toLocaleString('de-DE') + ' m' : '0 m') + '</span></div>';
+  }
+  box.innerHTML = html;
 }
 
+// Wechselt alle 20 Sekunden zwischen heute und der ganzen Messe — am Monitor
+// will man beides sehen, ohne dass jemand klickt.
+let alleZeiten = false;
 function laden(){
-  fetch(SB_URL + '/rest/v1/rpc/getkong_warteschlange', {
-    method: 'POST',
-    headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
-    body: '{}'
-  }).then(r => r.ok ? r.json() : Promise.reject(r.status))
-    .then(zeichnen)
-    .catch(function(){
-      el('liste').innerHTML = '<div class="leer">Keine Verbindung zur Anmeldung.<br>' +
-        'Am Spielgerät kann trotzdem gespielt werden.</div>';
-    });
-}
-
-function aktion(name){
-  if(!dran || !PIN) return;
-  el('status').textContent = 'Moment…';
-  fetch(SB_URL + '/rest/v1/rpc/getkong_stand_aktion', {
-    method: 'POST',
-    headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ p_code: dran.code, p_aktion: name, p_pin: PIN })
-  }).then(r => r.json())
-    .then(function(d){
-      const t = Array.isArray(d) ? d[0] : d;
-      el('status').textContent = t && t.hinweis ? t.hinweis : 'Erledigt';
-      laden();
-      setTimeout(function(){ el('status').textContent = ''; }, 4000);
+  const ab = alleZeiten ? SEASON_START : heuteAb();
+  el('titel').textContent = alleZeiten ? 'Bestenliste' : 'Tagesbeste';
+  el('listenLabel').textContent = alleZeiten ? 'Beste Kuriere der Messe' : 'Beste Kuriere heute';
+  fetch(SB_URL + '/rest/v1/getkong_scores?select=name,dist&created_at=gte.' +
+        encodeURIComponent(ab) + '&order=dist.desc&limit=200', { headers: { apikey: SB_KEY } })
+    .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    .then(rohe => {
+      zeichnen(bestenProName(rohe));
+      el('fuss').textContent = 'Aktualisiert ' + new Date().toLocaleTimeString('de-DE',
+        { hour: '2-digit', minute: '2-digit' });
     })
-    .catch(function(){ el('status').textContent = 'Ging nicht — nochmal probieren.'; });
+    .catch(() => { el('fuss').textContent = 'Keine Verbindung zur Bestenliste'; });
 }
-
-el('btnHinten').addEventListener('click', function(){ aktion('nach_hinten'); });
-el('btnSkip').addEventListener('click', function(){ aktion('ueberspringen'); });
 
 laden();
-setInterval(laden, 5000);
+setInterval(laden, 10000);
+setInterval(() => { alleZeiten = !alleZeiten; laden(); }, 20000);
 </script>
 </body>
 </html>

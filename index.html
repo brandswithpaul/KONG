@@ -5275,18 +5275,8 @@ function startGame(){
   // Vier Ziffern sind ein Spielcode, kein Name — sonst stünde "4711" in der
   // Bestenliste. Der aufgelöste Name gewinnt.
   if(codeName && /^\d{4}$/.test(name)){
-    const code = name;
+    try{ localStorage.setItem('gk_code', name); }catch(e){}
     name = codeName;
-    // Der Monitor am Stand streicht den Eintrag daraufhin von selbst. Fehlschlag
-    // ist egal: dann bleibt der Name in der Schlange und wird dort weggeklickt.
-    try{
-      fetch(SB_URL + '/rest/v1/rpc/getkong_gestartet', {
-        method: 'POST',
-        headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ p_code: code })
-      }).catch(function(){});
-      localStorage.setItem('gk_code', code);
-    }catch(e){}
   }
   if(!name) name = localStorage.getItem('getkong-name') || '';
   if(!name){
@@ -6801,7 +6791,7 @@ fernAbdunkeln(M.dash,     30, 130, 0.38);
 // Versionsstempel. Ohne den laesst sich nicht unterscheiden, ob eine Aenderung
 // nicht wirkt oder ob der Browser noch die alte Datei aus dem Cache zeigt —
 // GitHub Pages liefert index.html mit max-age=600 aus.
-const BUILD = 'B16 · 19.08. 03:00';
+const BUILD = 'B17 · 19.08. 03:20';
 window.BUILD = BUILD;
 (function(){ const f = el('buildStempel'); if(f) f.textContent = ' · ' + BUILD; })();
 // ---------- Diagnose-Schalter (?debug=1) ----------
