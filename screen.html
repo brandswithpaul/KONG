@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stand · GETKONG RUN</title>
+<meta name="robots" content="noindex">
+<style>
+  @font-face{font-family:'Switzer';src:url('assets/Switzer-Variable.woff2') format('woff2-variations'),
+    url('assets/Switzer-Variable.woff2') format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
+  @font-face{font-family:'Switzer';src:url('assets/Switzer-VariableItalic.woff2') format('woff2-variations'),
+    url('assets/Switzer-VariableItalic.woff2') format('woff2');font-weight:100 900;font-style:italic;font-display:swap}
+  @font-face{font-family:'Inter';src:url('assets/Inter-Variable.woff2') format('woff2');
+    font-weight:100 900;font-style:normal;font-display:swap}
+  :root{--dark:#162114;--lime:#c2e67e;--paper:#fdf8ea;
+    --font:'Switzer',system-ui,sans-serif;--klein:'Inter',system-ui,sans-serif;color-scheme:dark}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{min-height:100vh;background:var(--dark) url('assets/menu-strasse.jpg') center 45%/cover no-repeat;
+    font-family:var(--klein);color:var(--paper);overflow:hidden}
+  body::before{content:'';position:fixed;inset:0;background:linear-gradient(rgba(10,26,22,.78),rgba(8,20,17,.93))}
+  .raster{position:relative;height:100vh;display:grid;grid-template-columns:1.15fr .85fr;
+    gap:clamp(18px,2.4vw,38px);padding:clamp(18px,2.6vh,34px) clamp(20px,2.6vw,42px)}
+  .kopf{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:20px}
+  .kopf img{width:clamp(150px,15vw,240px)}
+  .kopf .titel{font-family:var(--font);font-weight:900;font-style:italic;text-transform:uppercase;
+    font-size:clamp(20px,2.6vw,38px);letter-spacing:.2em;-webkit-text-stroke:3px #16281f;paint-order:stroke fill;
+    text-shadow:0 0 26px rgba(194,230,126,.5)}
+  .spalte{display:flex;flex-direction:column;gap:clamp(12px,1.6vh,22px);min-height:0}
+  .kasten{background:rgba(14,30,25,.88);border:3px solid var(--lime);border-radius:22px;
+    padding:clamp(14px,1.8vh,24px) clamp(16px,1.6vw,26px);
+    box-shadow:0 0 0 3px rgba(12,26,21,.7),0 0 40px rgba(194,230,126,.32)}
+  .kasten.dran{background:linear-gradient(160deg,rgba(48,92,30,.95),rgba(14,30,25,.92));
+    animation:puls 2.6s ease-in-out infinite}
+  @keyframes puls{0%,100%{box-shadow:0 0 0 3px rgba(12,26,21,.7),0 0 34px rgba(194,230,126,.3)}
+    50%{box-shadow:0 0 0 3px rgba(12,26,21,.7),0 0 66px rgba(194,230,126,.62)}}
+  .label{font-size:clamp(10px,1vw,13px);letter-spacing:.28em;text-transform:uppercase;
+    color:var(--lime);opacity:.9}
+  .dranName{font-family:var(--font);font-weight:900;font-style:italic;text-transform:uppercase;
+    font-size:clamp(38px,7vw,104px);line-height:1;letter-spacing:.02em;margin:6px 0 2px;
+    -webkit-text-stroke:4px #16281f;paint-order:stroke fill;text-shadow:0 0 40px rgba(194,230,126,.55);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dranCode{font-family:var(--font);font-weight:800;font-size:clamp(20px,2.6vw,40px);
+    letter-spacing:.24em;color:var(--lime)}
+  .dranHinweis{font-size:clamp(11px,1.1vw,15px);opacity:.75;margin-top:8px;line-height:1.5}
+  .liste{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:clamp(4px,.7vh,10px)}
+  .zeile{display:flex;align-items:baseline;gap:12px;font-size:clamp(13px,1.5vw,22px)}
+  .zeile .nr{width:2.2em;flex:none;color:var(--lime);font-weight:700;opacity:.8}
+  .zeile .nm{font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .zeile .fill{flex:1;border-bottom:1px dotted rgba(253,248,234,.25);transform:translateY(-4px)}
+  .zeile .wartet{flex:none;opacity:.5;font-size:.8em;font-variant-numeric:tabular-nums}
+  .zeile.zurueck .nm::after{content:' · zurückgestellt';opacity:.55;font-size:.7em;letter-spacing:.1em}
+  .qrKasten{text-align:center}
+  .qrKasten svg{width:min(100%,320px);height:auto;background:#fdf8ea;border-radius:14px;padding:10px}
+  .qrText{margin-top:10px;font-size:clamp(11px,1.1vw,15px);line-height:1.5;opacity:.85}
+  .qrText b{color:var(--lime)}
+  .steuerung{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .steuerung button{flex:1 1 auto;background:none;border:2px solid rgba(194,230,126,.5);
+    border-radius:12px;color:var(--paper);font-family:var(--klein);font-weight:700;
+    font-size:clamp(11px,1vw,14px);letter-spacing:.12em;text-transform:uppercase;
+    padding:.7em 1em;cursor:pointer}
+  .steuerung button:hover{background:rgba(194,230,126,.14)}
+  .steuerung button.weg{border-color:rgba(226,112,92,.6);color:#ffc3b4}
+  .status{margin-top:8px;font-size:clamp(10px,1vw,13px);opacity:.65;min-height:1.2em}
+  .leer{opacity:.6;font-size:clamp(13px,1.4vw,20px);line-height:1.6}
+  @media (max-width:900px){ .raster{grid-template-columns:1fr;overflow-y:auto} }
+</style>
+</head>
+<body>
+<div class="raster">
+  <div class="kopf">
+    <img src="assets/getkong-logo-lime.svg" alt="GETKONG">
+    <div class="titel">Warteschlange</div>
+  </div>
+
+  <div class="spalte">
+    <div class="kasten dran" id="dranKasten">
+      <div class="label">Jetzt dran</div>
+      <div class="dranName" id="dranName">—</div>
+      <div class="dranCode" id="dranCode"></div>
+      <div class="dranHinweis" id="dranHinweis">Code am Spielgerät eingeben.</div>
+      <div class="steuerung" id="steuerung" hidden>
+        <button id="btnHinten">Nicht da → später</button>
+        <button id="btnSkip" class="weg">Streichen</button>
+      </div>
+      <div class="status" id="status"></div>
+    </div>
+
+    <div class="kasten" style="flex:1;min-height:0;display:flex;flex-direction:column">
+      <div class="label" style="margin-bottom:10px">Als Nächstes</div>
+      <div class="liste" id="liste"><div class="leer">Wird geladen…</div></div>
+    </div>
+  </div>
+
+  <div class="spalte">
+    <div class="kasten qrKasten">
+      <div class="label">Mitspielen</div>
+      <div id="qrZiel" style="margin-top:12px"></div>
+      <div class="qrText">
+        Scannen, anmelden, <b>Code</b> bekommen.<br>
+        Oder direkt: <b>getkong.run</b>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="namensfilter.js"></script>
+<script>
+const SB_URL = 'https://iejuuattiqyymcbprxmu.supabase.co';
+const SB_KEY = 'sb_publishable_CGkLV2Y_A9cctjrhBckeEA_xRNfdWRU';
+// Der PIN steht in der Adresse, nicht im Code: ?pin=kong2026
+const PIN = new URLSearchParams(location.search).get('pin') || '';
+
+const el = id => document.getElementById(id);
+let dran = null;
+
+fetch('assets/qr-anmeldung.svg').then(r => r.text()).then(svg => { el('qrZiel').innerHTML = svg; })
+  .catch(() => { el('qrZiel').textContent = 'QR fehlt'; });
+
+function minuten(seit){
+  const m = Math.round((Date.now() - new Date(seit).getTime()) / 60000);
+  return m < 1 ? 'gerade eben' : m + ' min';
+}
+
+function zeichnen(liste){
+  const box = el('liste');
+  if(!liste || !liste.length){
+    dran = null;
+    el('dranName').textContent = 'Frei';
+    el('dranCode').textContent = '';
+    el('dranHinweis').textContent = 'Niemand wartet — direkt losspielen.';
+    el('steuerung').hidden = true;
+    box.innerHTML = '<div class="leer">Noch niemand angemeldet.<br>QR scannen und los.</div>';
+    return;
+  }
+  dran = liste[0];
+  el('dranName').textContent = dran.username;
+  el('dranCode').textContent = 'Code ' + dran.code;
+  el('dranHinweis').textContent = 'Code am Spielgerät eingeben — die Schlange rückt dann von allein nach.';
+  el('steuerung').hidden = !PIN;
+
+  box.innerHTML = liste.slice(1).map(function(e, i){
+    return '<div class="zeile' + (e.nach_hinten ? ' zurueck' : '') + '">' +
+      '<span class="nr">' + (i + 2) + '.</span>' +
+      '<span class="nm">' + e.username.replace(/</g, '&lt;') + '</span>' +
+      '<span class="fill"></span>' +
+      '<span class="wartet">' + minuten(e.wartet_seit) + '</span></div>';
+  }).join('') || '<div class="leer">Sonst wartet niemand.</div>';
+}
+
+function laden(){
+  fetch(SB_URL + '/rest/v1/rpc/getkong_warteschlange', {
+    method: 'POST',
+    headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+    body: '{}'
+  }).then(r => r.ok ? r.json() : Promise.reject(r.status))
+    .then(zeichnen)
+    .catch(function(){
+      el('liste').innerHTML = '<div class="leer">Keine Verbindung zur Anmeldung.<br>' +
+        'Am Spielgerät kann trotzdem gespielt werden.</div>';
+    });
+}
+
+function aktion(name){
+  if(!dran || !PIN) return;
+  el('status').textContent = 'Moment…';
+  fetch(SB_URL + '/rest/v1/rpc/getkong_stand_aktion', {
+    method: 'POST',
+    headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_code: dran.code, p_aktion: name, p_pin: PIN })
+  }).then(r => r.json())
+    .then(function(d){
+      const t = Array.isArray(d) ? d[0] : d;
+      el('status').textContent = t && t.hinweis ? t.hinweis : 'Erledigt';
+      laden();
+      setTimeout(function(){ el('status').textContent = ''; }, 4000);
+    })
+    .catch(function(){ el('status').textContent = 'Ging nicht — nochmal probieren.'; });
+}
+
+el('btnHinten').addEventListener('click', function(){ aktion('nach_hinten'); });
+el('btnSkip').addEventListener('click', function(){ aktion('ueberspringen'); });
+
+laden();
+setInterval(laden, 5000);
+</script>
+</body>
+</html>

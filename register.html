@@ -121,6 +121,7 @@
   </div>
 </div>
 
+<script src="namensfilter.js"></script>
 <script>
 // Die Edge Function macht alles: prüfen, Code vergeben, Mail schicken.
 // Hier liegt nur der öffentliche Schlüssel — der darf das.
@@ -141,7 +142,13 @@ el('form').addEventListener('submit', async function(e){
   const meldung  = el('meldung');
   meldung.textContent = '';
 
-  if(!username){ ruckel(el('username')); el('username').focus(); return; }
+  // Der Name landet auf einem Monitor am Stand — vorher durch den Filter.
+  const gepruft = Namensfilter.pruefeName(username);
+  if(!gepruft.ok){
+    ruckel(el('username')); el('username').focus();
+    meldung.textContent = gepruft.grund;
+    return;
+  }
   if(!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(email)){ ruckel(el('email')); el('email').focus(); return; }
   if(!consent){ ruckel(el('hakenZeile')); return; }
 
