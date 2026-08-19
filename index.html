@@ -827,7 +827,7 @@ const CFG = {
   // 20 Lieferungen + 150 Brokkoli + 10 Tricks ≈ ×2,9.
   multProLieferung: 0.06, multProBrokkoli: 0.004, multProTrick: 0.012,
   cannonDur: 4, cannonRate: 0.28,   // Kanone: Sekunden Dauerfeuer und Takt
-  lives: 5, respawnFreeze: 1.6,     // Leben und Pause nach einem Crash
+  lives: 3, respawnFreeze: 1.6,     // Leben und Pause nach einem Crash
   // Multiplikator wächst langsam: 10 Lieferungen = 2×, 20 = 3×, 30 = 4×
   multPerDelivery: 0.1, multMax: 3,
   perfectWindow: 9,        // ± Meter um die Tür, in denen die Lieferung "perfekt" zählt
@@ -2007,8 +2007,10 @@ function makeLogoURL(bg, fg){
   return c.toDataURL('image/png');
 }
 function applyOverlayPattern(){
-  // Beide Overlays tragen ihren Hintergrund jetzt im CSS — hier nur noch das HUD-Logo.
-  document.getElementById('hudlogo').src = makeLogoURL('#24401f', '#c2e67e');
+  // Das HUD trug bisher eine auf Canvas nachgebaute Wortmarke (makeLogoURL) —
+  // ähnlich, aber nicht das Logo. Im Menü und auf allen anderen Seiten läuft
+  // längst die echte SVG-Datei; jetzt auch hier.
+  document.getElementById('hudlogo').src = 'assets/getkong-logo-lime.svg';
 }
 if(document.fonts && document.fonts.ready){
   document.fonts.ready.then(function(){
@@ -6791,7 +6793,7 @@ fernAbdunkeln(M.dash,     30, 130, 0.38);
 // Versionsstempel. Ohne den laesst sich nicht unterscheiden, ob eine Aenderung
 // nicht wirkt oder ob der Browser noch die alte Datei aus dem Cache zeigt —
 // GitHub Pages liefert index.html mit max-age=600 aus.
-const BUILD = 'B17 · 19.08. 03:20';
+const BUILD = 'B18 · 19.08. 03:35';
 window.BUILD = BUILD;
 (function(){ const f = el('buildStempel'); if(f) f.textContent = ' · ' + BUILD; })();
 // ---------- Diagnose-Schalter (?debug=1) ----------
