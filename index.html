@@ -741,10 +741,10 @@
         </div>
         <div class="tasten" id="ctrlPad" hidden>
           <div class="treihe">
-            <span class="keycap breit">Stick</span><span class="keycap">R2</span>
-            <span class="keycap">L2</span><span class="keycap">&#10005;</span>
+            <span class="keycap breit">Stick</span><span class="keycap">B</span>
+            <span class="keycap breit">Start</span>
           </div>
-          <div class="tlegende">Lenken · Gas · Bremse · Springen &amp; Liefern</div>
+          <div class="tlegende">Stick lenkt und gibt Gas · B springt &amp; liefert · Start pausiert</div>
         </div>
         <div id="padHint" hidden>Controller verbunden — <b>✕</b> oder <b>Options</b></div>
         <div id="tonHinweis" hidden>Für Ton einmal ins Bild klicken</div>
@@ -6201,23 +6201,43 @@ function pollGamepad(){
   const standard = (pad.mapping === 'standard');
   const sony = /054c|dualshock|dualsense|wireless controller/i.test(pad.id || '');
 
+  // Manche Pads — darunter 8BitDo im D-Input-Modus — melden das Steuerkreuz
+  // nicht als Knöpfe, sondern als "Hat" auf einer eigenen Achse mit acht
+  // Rastungen. Ohne diese Umrechnung tut das Kreuz dort gar nichts.
+  function hat(){
+    const h = ax[9];
+    if(h === undefined || h > 1.2 || h < -1.2) return null;
+    const w = Math.round(((h + 1) / 2) * 7);              // 0..7 = oben, dann im Uhrzeigersinn
+    return {oben: w === 0 || w === 1 || w === 7,
+            rechts: w >= 1 && w <= 3,
+            unten: w >= 3 && w <= 5,
+            links: w >= 5 && w <= 7};
+  }
+  const h = hat();
+
   // Lenkung analog: der Stickweg steuert die Stärke, nicht nur die Richtung.
   let achse = (ax[0] !== undefined) ? ax[0] : 0;
   if(Math.abs(achse) < 0.12) achse = 0;                  // Totzone gegen Drift
-  if(on(14)) achse = -1;                                  // Steuerkreuz übersteuert
-  if(on(15)) achse = 1;
+  if(on(14) || (h && h.links))  achse = -1;               // Steuerkreuz übersteuert
+  if(on(15) || (h && h.rechts)) achse = 1;
   gp.achse = Math.max(-1, Math.min(1, achse));
   gp.left  = gp.achse < -0.12;
   gp.right = gp.achse >  0.12;
 
+  // Der linke Stick kann alles, was die Pfeiltasten können: links/rechts lenkt,
+  // hoch gibt Gas, runter bremst. Wer den Stick benutzt, soll nicht zusätzlich
+  // nach den Triggern suchen müssen.
+  const stickHoch  = ax[1] !== undefined && ax[1] < -0.45;
+  const stickRunter = ax[1] !== undefined && ax[1] >  0.45;
+  const trig = function(i){ return ax[i] !== undefined && ax[i] > 0.2; };
+
   if(standard || sony){
-    gp.gas   = on(7) || on(12) || on(0);   // R2, Steuerkreuz hoch oder Kreuz
-    gp.brake = on(6) || on(13);            // L2 oder Steuerkreuz runter
+    gp.gas   = !!(on(7) || on(12) || stickHoch  || (h && h.oben));   // R2, Kreuz hoch, Stick hoch
+    gp.brake = !!(on(6) || on(13) || stickRunter || (h && h.unten)); // L2, Kreuz runter, Stick runter
   } else {
     // Unbekanntes Layout: Achsen 2–5 tragen bei manchen Pads die Trigger
-    const trig = function(i){ return ax[i] !== undefined && ax[i] > 0.2; };
-    gp.gas   = on(7) || on(0) || trig(5);
-    gp.brake = on(6) || trig(4);
+    gp.gas   = !!(on(7) || trig(5) || stickHoch  || (h && h.oben));
+    gp.brake = !!(on(6) || trig(4) || stickRunter || (h && h.unten));
   }
 
   // Flankenerkennung: nur beim Drücken auslösen, nicht solange gehalten wird
@@ -6225,10 +6245,16 @@ function pollGamepad(){
     if(gedrueckt && !gpEdge[name]) fn();
     gpEdge[name] = gedrueckt;
   };
-  // Kreuz/A springt und liefert, Kreis/B genauso — am Stand drückt jeder etwas
-  // anderes. Options/Start und der große PS-Knopf starten die Schicht.
-  flanke('jump',  on(0) || on(1),           function(){ if(S.mode === 'play') jumpPressed(); else startGame(); });
-  flanke('start', on(9) || on(16) || on(8), function(){ if(S.mode !== 'play') startGame(); });
+  // Springen liegt auf den beiden unteren Gesichtsknöpfen. Beim 8BitDo (und
+  // jedem Pad im Nintendo-Layout) ist der untere Knopf mit B beschriftet und
+  // landet je nach Modus auf Index 0 oder 1 — beide zu nehmen deckt alle Modi
+  // ab, ohne dass jemand am Pad umschalten muss.
+  flanke('jump',  on(0) || on(1), function(){ if(S.mode === 'play') jumpPressed(); else startGame(); });
+  // Start pausiert im Spiel und startet im Menü. Vorher tat Start während des
+  // Spiels nichts — pausieren ging nur an der Tastatur.
+  flanke('start', on(9) || on(16) || on(8), function(){
+    if(S.mode === 'play') pauseUmschalten(); else startGame();
+  });
   // Quadrat/Dreieck: Kanone von Hand, falls Munition da ist
   flanke('feuer', on(2) || on(3), function(){ if(S.mode === 'play' && S.ammo > 0 && !S.autoFire) startAutoFire(); });
 }
@@ -6964,7 +6990,7 @@ fernAbdunkeln(M.dash,     30, 130, 0.38);
 // Versionsstempel. Ohne den laesst sich nicht unterscheiden, ob eine Aenderung
 // nicht wirkt oder ob der Browser noch die alte Datei aus dem Cache zeigt —
 // GitHub Pages liefert index.html mit max-age=600 aus.
-const BUILD = 'B21 · getkong.world';
+const BUILD = 'B20 · 19.08. 04:30';
 window.BUILD = BUILD;
 (function(){ const f = el('buildStempel'); if(f) f.textContent = ' · ' + BUILD; })();
 // ---------- Diagnose-Schalter (?debug=1) ----------
@@ -7014,6 +7040,33 @@ if(location.search.indexOf('debug=1') >= 0){
       if(e.key === String(i + 1)){ cb.checked = !cb.checked; sch[1](cb.checked); }
     });
   });
+  // Controller-Anzeige: zeigt roh, was der Browser meldet. Ohne die tappt man
+  // bei "geht nicht" im Dunkeln — Pad nicht erkannt, falscher Modus und
+  // klemmender Knopf sehen von außen gleich aus.
+  const padBox = document.createElement('div');
+  padBox.style.cssText = 'margin-top:8px;padding-top:8px;border-top:1px solid rgba(194,230,126,.25);' +
+    'font-size:11px;line-height:1.5;max-width:340px;word-break:break-word';
+  box.appendChild(padBox);
+  setInterval(function(){
+    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    let pad = null;
+    for(const p of pads){ if(p){ pad = p; break; } }
+    if(!pad){
+      padBox.innerHTML = '<b style="color:#ffb59c">Kein Controller erkannt</b><br>' +
+        'Einen Knopf drücken — der Browser meldet Pads erst nach der ersten Eingabe.';
+      return;
+    }
+    const gedrueckt = [];
+    pad.buttons.forEach(function(b2, i){ if(b2.pressed || b2.value > 0.35) gedrueckt.push(i); });
+    const achsen = Array.prototype.map.call(pad.axes, function(a2){ return a2.toFixed(2); }).join(' ');
+    padBox.innerHTML =
+      '<b style="color:#c2e67e">' + (pad.id || 'unbenannt').slice(0, 46) + '</b><br>' +
+      'mapping: <b>' + (pad.mapping || '(leer)') + '</b> · Knöpfe: ' + pad.buttons.length +
+      ' · Achsen: ' + pad.axes.length + '<br>' +
+      'gedrückt: <b>' + (gedrueckt.length ? gedrueckt.join(', ') : '—') + '</b><br>' +
+      'Achsen: ' + achsen;
+  }, 120);
+
   const hinweis = document.createElement('div');
   hinweis.textContent = 'Haken raus = aus. Auch per Zifferntaste.';
   hinweis.style.cssText = 'opacity:.6;margin-top:3px';
