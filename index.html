@@ -108,7 +108,6 @@
   #hudname{font-weight:800;font-size:clamp(11px,1.7vw,13px);letter-spacing:.13em;
     text-transform:uppercase;color:var(--lime);max-width:10em;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  #multval{color:var(--lime);font-weight:800}
   #next{margin-top:8px;display:none}
   #nextlabel{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--lime);
     text-shadow:0 1px 6px rgba(0,0,0,.6);margin-bottom:4px}
@@ -319,8 +318,11 @@
   #menu #menuScores .srow{display:flex;align-items:baseline;gap:8px;padding:4px 0;
     background:none;font-weight:500}
   #menu #menuScores .srow .rk{width:2.6em;flex:none;color:var(--lime);font-weight:700}
-  #menu #menuScores .sname{flex:none;max-width:7em;text-transform:uppercase;
-    letter-spacing:.14em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* Namen nicht mehr kappen: 14 Zeichen sind erlaubt, also müssen 14 Zeichen
+     auch hinpassen. Die Punktlinie schrumpft stattdessen. */
+  #menu #menuScores .sname{flex:none;max-width:none;text-transform:uppercase;
+    letter-spacing:.1em;white-space:nowrap}
+  #menu #menuScores .fill{min-width:6px}
   #menu #menuScores .fill{flex:1;border-bottom:1px dotted rgba(253,248,234,.3);
     transform:translateY(-3px);min-width:10px}
   #menu #menuScores .sc{flex:none;font-variant-numeric:tabular-nums;font-weight:700}
@@ -404,7 +406,9 @@
     width:6px;height:11px;border:solid #16281f;border-width:0 3px 3px 0;transform:rotate(42deg)}
   #menu .dsgvo.err input{border-color:#c0432f;animation:errshake2 .3s}
   #menu .legal{position:static;margin-top:7px;width:auto;text-align:center;
-    font-family:var(--klein);color:#fdf8ea;opacity:.4;font-size:8px;letter-spacing:.06em}
+    font-family:var(--klein);color:#fdf8ea;opacity:.45;font-size:8px;letter-spacing:.06em;line-height:1.9}
+  #menu .legal a{color:#fdf8ea;text-decoration:underline;text-underline-offset:2px;pointer-events:auto}
+  #menu .legal a:hover{color:var(--lime)}
   #tonHinweis{margin-top:6px;padding:5px 12px;border-radius:99px;
     background:rgba(194,230,126,.9);color:#16210f;font-family:var(--font);
     font-weight:800;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
@@ -632,9 +636,15 @@
       <span id="hudname">—</span>
     </div>
     <div class="hudline big"><span id="score">0</span><small>m</small></div>
+    <!-- Der Multiplikator-Chip ist raus. Lieferungen und Brokkoli sind jetzt
+         schlicht Meter; gezeigt werden nur noch die beiden Zähler. -->
     <div id="tlchips">
-      <span class="chip" id="multval">×1,0</span>
-      <span class="chip"><svg class="brocIcon" viewBox="0 0 24 24"><path d="M12 3a3.2 3.2 0 0 1 3 2.1 3 3 0 0 1 2.3 4.6A3.1 3.1 0 0 1 15.4 14H8.6a3.1 3.1 0 0 1-1.9-4.3A3 3 0 0 1 9 5.1 3.2 3.2 0 0 1 12 3z"/><path d="M10.6 14l.5 7h1.8l.5-7"/></svg><span id="hudDel">0</span></span>
+      <span class="chip" title="Lieferungen">
+        <svg class="brocIcon" viewBox="0 0 24 24"><path d="M4 7h11v8H4z"/><path d="M15 10h4l2 3v2h-6z"/><circle cx="7.5" cy="17" r="1.6"/><circle cx="17" cy="17" r="1.6"/></svg>
+        <span id="hudDel">0</span></span>
+      <span class="chip" title="Brokkoli">
+        <svg class="brocIcon" viewBox="0 0 24 24"><path d="M12 3a3.2 3.2 0 0 1 3 2.1 3 3 0 0 1 2.3 4.6A3.1 3.1 0 0 1 15.4 14H8.6a3.1 3.1 0 0 1-1.9-4.3A3 3 0 0 1 9 5.1 3.2 3.2 0 0 1 12 3z"/><path d="M10.6 14l.5 7h1.8l.5-7"/></svg>
+        <span id="hudBrok">0</span></span>
     </div>
     <div id="rangleiste">
       <div id="next"><div id="nextlabel"></div><div id="nextwrap" hidden><div id="nextbar"></div></div></div>
@@ -706,6 +716,7 @@
       <div id="scoreCol">
         <div id="bestRow">
           <button class="mtab aktiv" id="mtabHeute">Heute</button>
+          <button class="mtab" id="mtabMesse">Cannafair</button>
           <button class="mtab" id="mtabAlle">Alle Zeiten</button>
         </div>
         <div id="menuScores"></div>
@@ -750,7 +761,10 @@
         <div id="tonHinweis" hidden>Für Ton einmal ins Bild klicken</div>
       </div>
     </div>
-    <div class="legal">Fiktives Spiel. Wirf zuhause bitte kein Gemüse in fremde Fenster.</div>
+    <div class="legal">Fiktives Spiel. Wirf zuhause bitte kein Gemüse in fremde Fenster.<br>
+    <a href="https://www.getkong.de/impressum" target="_blank" rel="noopener">Impressum</a> ·
+    <a href="https://www.getkong.de/datenschutz" target="_blank" rel="noopener">Datenschutz</a> ·
+    <a href="https://www.getkong.de/agb" target="_blank" rel="noopener">AGB</a></div>
   </div>
 </div>
 
@@ -766,6 +780,7 @@
     <h2 id="boardTitel">Bestenliste</h2>
     <div id="boardTabs">
       <button class="btabs aktiv" id="tabHeute">Heute</button>
+      <button class="btabs" id="tabMesse">Cannafair</button>
       <button class="btabs" id="tabAlle">Alle Zeiten</button>
     </div>
     <div id="boardListe"><div class="bhint">Wird geladen…</div></div>
@@ -801,7 +816,7 @@
     <div class="ovRank" id="ovRank">Platz wird ermittelt…</div>
     <div class="ovStats">
       <div><b id="finalMeters">0 m</b><span>gefahren</span></div>
-      <div><b id="ovMult">×1,0</b><span>Multi</span></div>
+
       <div><b id="finalDel">0</b><span>Lieferungen</span></div>
       <div><b id="finalCoins">0</b><span>Brokkoli</span></div>
       <div><b id="finalLvl">1</b><span>Level</span></div>
@@ -809,7 +824,7 @@
     <div class="ovBoard" id="scores"></div>
     <div class="ovQuip" id="overQuip">—</div>
     <div class="ovBtns">
-      <button class="btn" id="retryBtn">Nochmal</button>
+      <button class="btn" id="retryBtn">Zum Start</button>
       <button class="btn ghost" id="overBoardBtn">Bestenliste</button>
       <button class="btn ghost" id="shareBtn">Teilen</button>
     </div>
@@ -846,7 +861,9 @@ const CFG = {
   roadHalf: 5.4,
   curbXmin: 6.2, curbXmax: 9.2, curbY: 0.30,
   curbLen0: 85, curbLenMin: 34, curbLenStep: 18,
-  curbGapMin: 150, curbGapVar: 160,
+  // Weiter auseinander: bei 150 m Mindestabstand kam die nächste Zone schon
+  // während des Mega-Sprungs der vorigen. Jetzt liegt dazwischen echte Strecke.
+  curbGapMin: 260, curbGapVar: 220,
   hopV: 5.4, gravity: -13,
   leapBase: 50, leapPerSpeed: 2.5, leapHeight: 6.5,
   throwDelay: 0.45,                // erst Wurf, dann Sprung
@@ -856,9 +873,11 @@ const CFG = {
   // Punkte gibt es nicht mehr: gewertet werden Meter mal Multiplikator.
   metersPerPoint: 15,      // (ungenutzt, bleibt für den Rückweg stehen)
   deliverPts: 10, perfectPts: 20, coinPts: 1, hopPts: 3, trickPts: 5, cannonPts: 2,
-  // Beiträge zum Multiplikator — bewusst zäh. Die ersten 1.000 m soll er sich
-  // kaum bewegen (dort etwa ×1,15); ×3 ist eine Sache langer Läufe:
-  // 20 Lieferungen + 150 Brokkoli + 10 Tricks ≈ ×2,9.
+  // Kein Multiplikator mehr. Lieferungen und Brokkoli sind schlicht Meter, die
+  // aufs Konto kommen — dieselbe Einheit wie das Fahren. Wer 200 m fährt und
+  // eine Lieferung macht, steht bei 400. Das versteht man ohne Erklärung, und
+  // auf der Bestenliste steht weiterhin nur eine Zahl.
+  meterProLieferung: 200, meterProBrokkoli: 25, meterProTrick: 40,
   multProLieferung: 0.06, multProBrokkoli: 0.004, multProTrick: 0.012,
   cannonDur: 4, cannonRate: 0.28,   // Kanone: Sekunden Dauerfeuer und Takt
   lives: 3, respawnFreeze: 1.6,     // Leben und Pause nach einem Crash
@@ -4328,7 +4347,21 @@ function spawnCar(zOff){
     const belegt = cars.some(function(c){
       return Math.abs(c.lane - kandidat) < 2.4 && Math.abs(c.g.position.z - zNeu) < 26;
     });
-    if(!belegt){ lane = kandidat + (Math.random()*0.6 - 0.3); break; }
+    if(!belegt){
+      // Normalerweise fährt jeder in seiner Spur, mit etwas Zittern. Ab und zu
+      // schert einer aus und fährt weit außen — genau auf der Trennlinie. Ohne
+      // das kann man die Linie zwischen zwei Spuren endlos durchfahren, weil
+      // dort per Definition nie jemand ist. Die Häufigkeit wächst mit der
+      // Distanz: bei 0 m jedes zwanzigste Auto, ab 3.000 m jedes fünfte.
+      const ausscherQuote = Math.min(0.20, 0.05 + S.dist / 20000);
+      if(Math.random() < ausscherQuote && kandidat !== 0){
+        // Zur Fahrbahnmitte hin versetzen, also auf die Linie zur Nachbarspur
+        lane = kandidat - Math.sign(kandidat) * (1.5 + Math.random() * 0.5);
+      } else {
+        lane = kandidat + (Math.random()*0.6 - 0.3);
+      }
+      break;
+    }
   }
   if(lane === null) return;                          // alles dicht: diesmal keiner
   const g = makeCar();
@@ -4846,29 +4879,55 @@ function heuteAb(){
   const d = new Date(); d.setHours(0, 0, 0, 0);
   return d.toISOString();
 }
-// 'heute' oder 'alle' — der Startbildschirm merkt sich die Wahl fuer die Sitzung.
+// Drei Zeiträume: heute, die Messetage und alles. Cannafair läuft vom 21. bis
+// 23. August 2026; die Grenzen stehen in Ortszeit (UTC+2) und damit als 22:00Z
+// des Vortags bis 22:00Z des letzten Tages.
+const MESSE_START = '2026-08-20T22:00:00Z';
+const MESSE_ENDE  = '2026-08-23T22:00:00Z';
+// Der Filter auf `versteckt` läuft ins Leere, solange die Spalte nicht
+// existiert — PostgREST antwortet dann mit 400 und die Tafel bliebe leer.
+// Deshalb wird beim ersten Fehlschlag einmal umgeschaltet und der Filter für
+// die Sitzung weggelassen. So funktioniert das Spiel vor und nach dem SQL.
+var VERSTECKT_SPALTE = true;
+function versteckFilter(){ return VERSTECKT_SPALTE ? '&versteckt=is.false' : ''; }
+function holeScores(url, weiter, fehlschlag){
+  fetch(url + versteckFilter(), { headers: { apikey: SB_KEY } })
+    .then(function(r){
+      if(r.ok) return r.json();
+      if(VERSTECKT_SPALTE){                 // einmal ohne Filter nachfassen
+        VERSTECKT_SPALTE = false;
+        return fetch(url, { headers: { apikey: SB_KEY } })
+          .then(function(r2){ return r2.ok ? r2.json() : Promise.reject(r2.status); });
+      }
+      return Promise.reject(r.status);
+    })
+    .then(weiter)
+    .catch(fehlschlag || function(){});
+}
+function zeitFilter(modus){
+  if(modus === 'messe') return '&created_at=gte.' + encodeURIComponent(MESSE_START) +
+                               '&created_at=lt.'  + encodeURIComponent(MESSE_ENDE);
+  if(modus === 'alle')  return '';                       // wirklich alles
+  return '&created_at=gte.' + encodeURIComponent(heuteAb());
+}
+// 'heute', 'messe' oder 'alle' — der Startbildschirm merkt sich die Wahl.
 var MENU_MODUS = 'heute';
 function sbFetchTop(cb){
   try{
-    const ab = MENU_MODUS === 'alle' ? SEASON_START : heuteAb();
-    fetch(SB_URL + '/rest/v1/getkong_scores?select=name,dist,deliveries,level'
-      + '&created_at=gte.' + encodeURIComponent(ab) + '&order=dist.desc&limit=200', {
-      headers: { apikey: SB_KEY }
-    }).then(function(r){ return r.ok ? r.json() : Promise.reject(r.status); })
-      .then(function(list){
+    holeScores(SB_URL + '/rest/v1/getkong_scores?select=name,dist,deliveries,level'
+      + zeitFilter(MENU_MODUS) + '&order=dist.desc&limit=200',
+      function(list){
         // auch im Menü: ein Name, ein Platz
         globalTop = (typeof bestenProName === 'function') ? bestenProName(list) : list;
         if(cb) cb(globalTop);
-      })
-      .catch(function(){ if(cb) cb(null); });
+      },
+      function(){ if(cb) cb(null); });
   }catch(e){ if(cb) cb(null); }
 }
 // ---------- Bestenliste: Screen mit Heute/Alle Zeiten und Nachladen ----------
 const BOARD = {modus: 'heute', seite: 0, proSeite: 10, eintraege: [], amEnde: false, laeuft: false};
 
-function boardZeitfilter(){
-  return BOARD.modus === 'alle' ? SEASON_START : heuteAb();
-}
+
 
 // Ein Name, ein Platz. Supabase kann DISTINCT ON über REST nicht, also holen
 // wir mehr Zeilen als nötig und behalten je Name den besten Lauf. Ohne das
@@ -4898,19 +4957,18 @@ function boardLaden(anhaengen){
   const brauche = BOARD.seite * BOARD.proSeite;
   const holen = Math.max(120, brauche * 6);
   const url = SB_URL + '/rest/v1/getkong_scores?select=name,dist,deliveries,level'
-    + '&created_at=gte.' + encodeURIComponent(boardZeitfilter())
+    + zeitFilter(BOARD.modus)
     + '&order=dist.desc&limit=' + holen;
-  fetch(url, {headers: {apikey: SB_KEY}})
-    .then(function(r){ return r.ok ? r.json() : Promise.reject(r.status); })
-    .then(function(liste){
+  holeScores(url,
+    function(liste){
       BOARD.laeuft = false;
       BOARD.roh = liste || [];
       const eindeutig = bestenProName(BOARD.roh);
       BOARD.eintraege = eindeutig.slice(0, brauche);
       BOARD.amEnde = BOARD.eintraege.length >= eindeutig.length;
       boardZeichnen();
-    })
-    .catch(function(){
+    },
+    function(){
       BOARD.laeuft = false;
       if(!BOARD.eintraege.length){
         el('boardListe').innerHTML = '<div class="bhint">Keine Verbindung zur Bestenliste.</div>';
@@ -4963,6 +5021,7 @@ function boardSchliessen(){
 function boardModus(m){
   BOARD.modus = m;
   el('tabHeute').classList.toggle('aktiv', m === 'heute');
+  if(el('tabMesse')) el('tabMesse').classList.toggle('aktiv', m === 'messe');
   el('tabAlle').classList.toggle('aktiv', m === 'alle');
   el('boardListe').innerHTML = '<div class="bhint">Wird geladen…</div>';
   BOARD.eintraege = []; BOARD.amEnde = false;
@@ -5113,9 +5172,11 @@ function renderScores(top, entry){
 }
 function updateBestLine(){
   // Die Ueberschrift ist jetzt der aktive Reiter
-  const h = el('mtabHeute'), a = el('mtabAlle');
-  if(h) h.classList.toggle('aktiv', MENU_MODUS === 'heute');
-  if(a) a.classList.toggle('aktiv', MENU_MODUS === 'alle');
+  const paare = {heute: 'mtabHeute', messe: 'mtabMesse', alle: 'mtabAlle'};
+  for(const modus in paare){
+    const k = el(paare[modus]);
+    if(k) k.classList.toggle('aktiv', MENU_MODUS === modus);
+  }
 }
 // Reiter umschalten und neu laden. Ist "heute" noch leer, springt die Anzeige
 // beim ersten Laden von allein auf "Alle Zeiten" — eine leere Tafel am Stand
@@ -5539,7 +5600,7 @@ function gameOver(){
 // hinten — bei zehn Läufen von "paul" stand man auf Platz 11 statt Platz 2.
 function sbRang(score, cb){
   try{
-    fetch(SB_URL + '/rest/v1/getkong_scores?select=name&created_at=gte.' +
+    fetch(SB_URL + '/rest/v1/getkong_scores?select=name&versteckt=is.false&created_at=gte.' +
       encodeURIComponent(heuteAb()) + '&dist=gt.' + Math.floor(score) + '&limit=1000', {
       headers: { apikey: SB_KEY }
     }).then(function(r){ return r.ok ? r.json() : Promise.reject(r.status); })
@@ -5575,7 +5636,7 @@ function schichtEnde(){
   ui.overTitle.textContent = OVER_TITLES[(Math.random()*OVER_TITLES.length)|0];
   ui.overQuip.textContent = QUIPS[(Math.random()*QUIPS.length)|0];
   el('ovName').textContent = S.playerName || '—';
-  el('ovMult').textContent = '×' + multStand().toFixed(1).replace('.', ',');
+  // Multiplikator ist raus — das Feld auf der Karte gibt es nicht mehr.
   el('ovRank').textContent = 'Platz wird ermittelt…';
   sbRang(finale, function(rang){
     el('ovRank').textContent = rang ? ('Platz ' + rang + ' heute') : 'Ergebnis gespeichert';
@@ -5633,12 +5694,9 @@ function diffFactor(){ return ((S.level - 1) + S.dist / 600) * 1.1; } // Schwier
 // Brokkoli und Tricks geben keine eigenen Punkte mehr, sie heben ausschließlich
 // den Multiplikator. Der wächst langsam von 1 auf 3 und verfällt nicht.
 function speedFactor(){ return S.speed / CFG.startSpeed; }
-function multStand(){
-  const fortschritt = S.deliveries * CFG.multProLieferung
-                    + S.coins      * CFG.multProBrokkoli
-                    + (S.tricks||0)* CFG.multProTrick;
-  return Math.min(CFG.multMax, 1 + fortschritt);
-}
+// Der Multiplikator ist raus. Die Funktion bleibt stehen und liefert 1, weil
+// Ergebniskarte und HUD sie an mehreren Stellen abfragen.
+function multStand(){ return 1; }
 // Alte Signatur bleibt bestehen: die Ergebniskarte fragt den Stand darüber ab.
 function multFor(){ return multStand(); }
 function bumpMult(){
@@ -5647,14 +5705,19 @@ function bumpMult(){
 }
 // Jeder gefahrene Meter zählt mit dem Multiplikator, der in dem Moment steht —
 // früh aufgebauter Multiplikator ist deshalb mehr wert als später aufgebauter.
-function addMeter(m){ S.score += m * S.mult; }
+function addMeter(m){ S.score += m; }
+// Bonusmeter für Lieferungen, Brokkoli und Tricks. Sie laufen in dieselbe Zahl
+// wie die gefahrene Strecke — es gibt nur eine Währung.
+function bonusMeter(m){ S.score += m; }
 function resetMult(){
   S.mult = 1;
   updateMultHUD();
 }
 function updateMultHUD(){
-  const v = el('multval');
-  if(v) v.textContent = '×' + S.mult.toFixed(1).replace('.', ',');
+  // Der Chip ist weg — die Funktion bleibt, weil sie an vielen Stellen gerufen
+  // wird, und pflegt jetzt den Brokkoli-Zähler.
+  const b = el('hudBrok');
+  if(b) b.textContent = S.coins || 0;
 }
 
 // ---------- Brokkoli-Coins ----------
@@ -5790,7 +5853,8 @@ function manageCoins(dt){
       const cp = c.g.position;
       brokkoliBurst(cp.x, cp.y, cp.z);   // Effekt in Brokkoli-Form, nicht rund
       scene.remove(c.g); coins.splice(i,1);
-      S.coins++; addXP(10); bumpMult(); chargeTurbo(8); sfxCoin();
+      S.coins++; addXP(10); bonusMeter(CFG.meterProBrokkoli); chargeTurbo(8); sfxCoin();
+      updateMultHUD();
       if(S.tut) S.tut.brokkoli++;
       stauchen(0.18);
     }
@@ -6018,6 +6082,7 @@ function deliver(curb){
   if(curb.sweet) curb.sweet.visible = false;
   S.deliveries++;
   S.streak++;
+  bonusMeter(CFG.meterProLieferung);
   // Perfekt-Treffer: auf Türhöhe geliefert
   const perfect = Math.abs(S.z - curb.houseZ) <= CFG.perfectWindow;
   bumpMult();
@@ -6087,6 +6152,7 @@ function jumpPressed(){
     S.vy = Math.max(S.vy, 0) + 4.6 * jm;
     S.trick = {t:0, dur:0.95};
     S.tricks = (S.tricks || 0) + 1;
+    bonusMeter(CFG.meterProTrick);
     if(S.tut) S.tut.tricks++;
     bumpMult();
     sfxHop(); tone(520, 0.05, 0.25, 'triangle', 0.1);
@@ -6110,6 +6176,7 @@ addEventListener('keyup', e=>{ keys[e.code] = false; });
 el('startBtn').addEventListener('click', startGame);
 // ---------- Bestenliste: Knöpfe ----------
 el('tabHeute').addEventListener('click', function(){ boardModus('heute'); });
+el('tabMesse').addEventListener('click', function(){ boardModus('messe'); });
 el('tabAlle').addEventListener('click', function(){ boardModus('alle'); });
 el('boardMehr').addEventListener('click', function(){ boardLaden(true); });
 el('boardStart').addEventListener('click', function(){ boardSchliessen(); startGame(); });
@@ -6133,7 +6200,17 @@ const bOver = el('overBoardBtn'); if(bOver) bOver.addEventListener('click', func
   boardOeffnen();
 });
 
-el('retryBtn').addEventListener('click', startGame);
+// Kein Sofort-Neustart mehr: nach der Runde geht es zum Startbildschirm mit
+// Bestenliste und Anmeldung zurück. Am Stand wartet der Nächste, und die
+// Runde soll bewusst mit einem Namen beginnen, nicht aus Versehen weiterlaufen.
+el('retryBtn').addEventListener('click', function(){
+  ui.over.style.display = 'none';
+  ui.hud.style.display = 'none';
+  ui.menu.style.display = '';
+  S.mode = 'menu';
+  menuVideoPlay();
+  menuModus(MENU_MODUS || 'heute');
+});
 el('shareBtn').addEventListener('click', function(){
   const txt = S.playerName + ' hat ' + Math.floor(S.score).toLocaleString('de-DE') +
     ' m bei GETKONG RUNNER geschafft — ' + Math.floor(S.dist).toLocaleString('de-DE') + ' m gefahren, ' +
@@ -6949,6 +7026,7 @@ updateBestLine();
 renderMenuScores(null);
 menuModus('heute');
 el('mtabHeute').addEventListener('click', function(e){ e.stopPropagation(); menuModus('heute'); });
+el('mtabMesse').addEventListener('click', function(e){ e.stopPropagation(); menuModus('messe'); });
 el('mtabAlle').addEventListener('click', function(e){ e.stopPropagation(); menuModus('alle'); });
 kontakteSenden();   // Reste aus Laeufen ohne Netz nachreichen
 applyOverlayPattern();

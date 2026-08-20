@@ -37,7 +37,7 @@
     background:linear-gradient(rgba(10,26,22,.72),rgba(8,20,17,.9))}
   .karte{position:relative;width:min(420px,100%);
     background:rgba(14,30,25,.9);border:3px solid var(--lime);border-radius:24px;
-    padding:26px 22px 22px;backdrop-filter:blur(5px);
+    padding:26px 22px 20px;backdrop-filter:blur(5px);
     box-shadow:0 0 0 3px rgba(12,26,21,.75),0 0 44px rgba(194,230,126,.4)}
   .logo{display:block;width:min(220px,62%);margin:0 auto 4px}
   h1{font-family:var(--font);font-weight:900;font-style:italic;text-transform:uppercase;
@@ -46,12 +46,11 @@
     text-shadow:0 4px 0 rgba(10,24,18,.6),0 0 22px rgba(194,230,126,.5)}
   .unter{text-align:center;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
     color:var(--lime);opacity:.85;margin:10px 0 20px}
-  form{display:flex;flex-direction:column;gap:10px}
-  input{width:100%;background:rgba(12,26,20,.45);border:2px solid rgba(194,230,126,.55);
-    border-radius:16px;color:var(--paper);font-family:var(--klein);font-size:16px;
-    padding:.8em .9em;text-align:center}
-  input#username{font-weight:700;letter-spacing:.16em;text-transform:uppercase;
-    border-width:3px;border-color:var(--lime);font-size:17px}
+  form{display:flex;flex-direction:column;gap:11px}
+  input{width:100%;background:rgba(12,26,20,.45);border:3px solid var(--lime);
+    border-radius:16px;color:var(--paper);font-family:var(--klein);font-size:17px;
+    padding:.82em .9em;text-align:center}
+  input#username{font-weight:700;letter-spacing:.16em;text-transform:uppercase}
   input::placeholder{color:rgba(253,248,234,.42);text-transform:none;letter-spacing:.04em;font-weight:400}
   input:focus{outline:none;background:rgba(194,230,126,.12);box-shadow:0 0 0 4px rgba(194,230,126,.3)}
   input.err{border-color:#e2705c;animation:ruckel .3s}
@@ -65,13 +64,12 @@
   .haken input:checked::after{content:'';position:absolute;left:6px;top:1px;width:6px;height:12px;
     border:solid #16281f;border-width:0 3px 3px 0;transform:rotate(42deg)}
   .haken.err input{border-color:#e2705c;animation:ruckel .3s}
+  .haken a{color:var(--lime)}
   button{width:100%;background:var(--lime);color:#16281f;border:3px solid #16281f;border-radius:16px;
     font-family:var(--klein);font-weight:700;font-size:17px;letter-spacing:.2em;text-transform:uppercase;
     padding:.85em 1em;margin-top:4px;cursor:pointer}
   button:disabled{opacity:.55;cursor:progress}
-  .fuss{margin-top:14px;font-size:9.5px;letter-spacing:.05em;opacity:.45;text-align:center;line-height:1.5}
   .meldung{margin-top:12px;font-size:12px;text-align:center;color:#ffd0a0;min-height:1.2em}
-  /* Ergebnis: der Code ist das Einzige, was am Stand zählt */
   #fertig{display:none;text-align:center}
   #fertig.an{display:block}
   form.weg{display:none}
@@ -83,6 +81,11 @@
   .codeHinweis{font-size:13px;line-height:1.5;opacity:.9;margin-top:8px}
   .mailhinweis{margin-top:16px;padding:12px 14px;border:2px dashed rgba(194,230,126,.4);
     border-radius:14px;font-size:12px;line-height:1.5;opacity:.85}
+  /* Rechtliches: gehört sichtbar auf jede Seite, die Daten entgegennimmt */
+  .fuss{margin-top:16px;padding-top:12px;border-top:1px solid rgba(194,230,126,.2);
+    font-size:10px;line-height:1.6;opacity:.55;text-align:center}
+  .fuss a{color:var(--paper);text-decoration:underline;text-underline-offset:2px}
+  .fuss a:hover{color:var(--lime)}
 </style>
 </head>
 <body>
@@ -93,13 +96,13 @@
 
   <form id="form" novalidate>
     <input id="username" maxlength="14" placeholder="Username" autocomplete="off" spellcheck="false" required>
-    <input id="realname" maxlength="60" placeholder="Vorname Nachname" autocomplete="name">
     <input id="email" type="email" maxlength="120" placeholder="E-Mail-Adresse"
            autocomplete="email" inputmode="email" spellcheck="false" required>
     <label class="haken" id="hakenZeile">
-      <input type="checkbox" id="consent">
+      <input type="checkbox" id="consent" checked>
       <span>Ich bin einverstanden, dass GETKONG mir E-Mails zu Produkten und Aktionen schickt.
-            Ich kann das jederzeit widerrufen.</span>
+            Ich kann das jederzeit widerrufen. Es gilt die
+            <a href="https://www.getkong.de/datenschutz" target="_blank" rel="noopener">Datenschutzerklärung</a>.</span>
     </label>
     <button type="submit" id="senden">Code holen</button>
     <div class="meldung" id="meldung"></div>
@@ -110,14 +113,15 @@
     <div class="code" id="codeAus">0000</div>
     <div class="codeHinweis">Gib den Code am Spielgerät ein — dann kann es losgehen.</div>
     <div class="mailhinweis" id="mailhinweis">
-      Wir haben dir eine E-Mail geschickt. Bestätige sie einmal kurz,
-      damit wir dir schreiben dürfen. <b>Zum Spielen brauchst du das nicht.</b>
+      Wir haben dir den Code auch per E-Mail geschickt.
     </div>
   </div>
 
   <div class="fuss">
-    Wir speichern deine Angaben, um dich anzuschreiben. Ohne Bestätigung per Mail
-    passiert nichts. Widerruf jederzeit an paul@praise.studio.
+    <a href="https://www.getkong.de/impressum" target="_blank" rel="noopener">Impressum</a> ·
+    <a href="https://www.getkong.de/datenschutz" target="_blank" rel="noopener">Datenschutz</a> ·
+    <a href="https://www.getkong.de/agb" target="_blank" rel="noopener">AGB</a><br>
+    Fast Green Delivery UG (haftungsbeschränkt) · Friedrichstraße 155 · 10117 Berlin
   </div>
 </div>
 
@@ -150,7 +154,11 @@ el('form').addEventListener('submit', async function(e){
     return;
   }
   if(!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(email)){ ruckel(el('email')); el('email').focus(); return; }
-  if(!consent){ ruckel(el('hakenZeile')); return; }
+  if(!consent){
+    ruckel(el('hakenZeile'));
+    meldung.textContent = 'Ohne Einverständnis geht es leider nicht.';
+    return;
+  }
 
   el('senden').disabled = true;
   el('senden').textContent = 'Moment…';
@@ -159,7 +167,7 @@ el('form').addEventListener('submit', async function(e){
     const r = await fetch(SB_URL + '/functions/v1/anmelden', {
       method: 'POST',
       headers: { 'content-type': 'application/json', apikey: SB_KEY, authorization: 'Bearer ' + SB_KEY },
-      body: JSON.stringify({ username, realname: el('realname').value.trim(), email, consent: true })
+      body: JSON.stringify({ username, email, consent: true })
     });
     const d = await r.json();
     if(!r.ok) throw new Error(d.fehler || ('HTTP ' + r.status));
@@ -167,15 +175,12 @@ el('form').addEventListener('submit', async function(e){
     el('codeAus').textContent = d.code;
     el('form').classList.add('weg');
     el('fertig').classList.add('an');
-    // Merken, damit das Spielgerät den Code nicht nochmal erfragen muss, wenn
-    // jemand auf demselben Gerät weiterspielt.
     try{ localStorage.setItem('gk_code', d.code); localStorage.setItem('getkong-name', username); }catch(err){}
     if(d.mail && d.mail !== 'gesendet'){
-      el('mailhinweis').innerHTML = 'Die Bestätigungsmail konnte gerade nicht raus — ' +
-        'wir holen das nach. <b>Dein Code gilt trotzdem.</b>';
+      el('mailhinweis').textContent = 'Die E-Mail konnte gerade nicht raus — dein Code gilt trotzdem.';
     }
     if(d.bekannt){
-      el('mailhinweis').innerHTML = 'Diese Adresse kennen wir schon — das ist dein bestehender Code.';
+      el('mailhinweis').textContent = 'Diese Adresse kennen wir schon — das ist dein bestehender Code.';
     }
   }catch(err){
     // Am Stand darf eine wacklige Verbindung niemanden aufhalten.

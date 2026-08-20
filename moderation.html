@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Moderation · GETKONG RUN</title>
+<meta name="robots" content="noindex">
+<style>
+  @font-face{font-family:'Inter';src:url('assets/Inter-Variable.woff2') format('woff2');
+    font-weight:100 900;font-style:normal;font-display:swap}
+  :root{--dark:#162114;--lime:#c2e67e;--paper:#fdf8ea;color-scheme:dark}
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{min-height:100dvh;background:var(--dark);color:var(--paper);
+    font-family:'Inter',system-ui,sans-serif;padding:18px 14px calc(18px + env(safe-area-inset-bottom))}
+  h1{font-size:15px;letter-spacing:.22em;text-transform:uppercase;color:var(--lime);
+    margin-bottom:4px}
+  .hinweis{font-size:11px;opacity:.6;line-height:1.5;margin-bottom:16px}
+  .pinzeile{display:flex;gap:8px;margin-bottom:16px}
+  input{flex:1;background:rgba(255,255,255,.06);border:2px solid rgba(194,230,126,.5);
+    border-radius:12px;color:var(--paper);font:inherit;font-size:16px;padding:.7em .9em}
+  input:focus{outline:none;border-color:var(--lime)}
+  button{background:var(--lime);color:#16281f;border:none;border-radius:12px;
+    font:inherit;font-weight:700;font-size:14px;padding:.7em 1.2em;cursor:pointer}
+  .zeile{display:flex;align-items:center;gap:10px;padding:11px 12px;margin-bottom:7px;
+    background:rgba(255,255,255,.05);border-radius:12px;border:1px solid rgba(255,255,255,.07)}
+  .zeile.aus{opacity:.42;background:rgba(226,112,92,.09);border-color:rgba(226,112,92,.3)}
+  .nm{font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+  .sc{font-variant-numeric:tabular-nums;font-weight:700;color:var(--lime);flex:none}
+  .zeit{font-size:10px;opacity:.45;flex:none;width:3.6em;text-align:right}
+  .zeile button{background:none;border:2px solid rgba(226,112,92,.55);color:#ffc3b4;
+    font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:.45em .8em;flex:none}
+  .zeile.aus button{border-color:rgba(194,230,126,.55);color:var(--lime)}
+  .status{font-size:12px;opacity:.75;margin:10px 0;min-height:1.2em}
+</style>
+</head>
+<body>
+  <h1>Moderation</h1>
+  <div class="hinweis">
+    Blendet Einträge aus der Bestenliste aus, ohne sie zu löschen — Ausblenden
+    lässt sich zurücknehmen, Löschen nicht. Zeigt die letzten drei Tage.
+  </div>
+
+  <div class="pinzeile">
+    <input id="pin" type="password" placeholder="PIN" autocomplete="off" inputmode="text">
+    <button id="laden">Laden</button>
+  </div>
+  <div class="status" id="status"></div>
+  <div id="liste"></div>
+
+<script>
+const SB_URL = 'https://iejuuattiqyymcbprxmu.supabase.co';
+const SB_KEY = 'sb_publishable_CGkLV2Y_A9cctjrhBckeEA_xRNfdWRU';
+const el = id => document.getElementById(id);
+
+// PIN darf in der Adresse stehen, damit der Stand-Laptop ein Lesezeichen hat.
+const ausUrl = new URLSearchParams(location.search).get('pin');
+if(ausUrl) el('pin').value = ausUrl;
+
+function rpc(name, body){
+  return fetch(SB_URL + '/rest/v1/rpc/' + name, {
+    method: 'POST',
+    headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  }).then(r => r.ok ? r.json() : Promise.reject(r.status));
+}
+
+function minuten(seit){
+  const m = Math.round((Date.now() - new Date(seit).getTime()) / 60000);
+  if(m < 60) return m + 'm';
+  if(m < 1440) return Math.round(m/60) + 'h';
+  return Math.round(m/1440) + 'd';
+}
+
+function zeichnen(rows){
+  const box = el('liste');
+  if(!rows || !rows.length){
+    box.innerHTML = '<div class="hinweis">Nichts da — oder der PIN stimmt nicht.</div>';
+    return;
+  }
+  box.innerHTML = '';
+  for(const r of rows){
+    const d = document.createElement('div');
+    d.className = 'zeile' + (r.versteckt ? ' aus' : '');
+    d.innerHTML = '<span class="nm"></span><span class="sc"></span><span class="zeit"></span>';
+    d.querySelector('.nm').textContent = r.name || '—';
+    d.querySelector('.sc').textContent = Number(r.dist).toLocaleString('de-DE');
+    d.querySelector('.zeit').textContent = minuten(r.created_at);
+    const b = document.createElement('button');
+    b.textContent = r.versteckt ? 'Zeigen' : 'Ausblenden';
+    b.addEventListener('click', function(){
+      b.disabled = true;
+      rpc('getkong_verstecken', { p_id: r.id, p_wert: !r.versteckt, p_pin: el('pin').value })
+        .then(function(a){
+          const t = Array.isArray(a) ? a[0] : a;
+          el('status').textContent = (t && t.hinweis) || 'Erledigt';
+          laden();
+        })
+        .catch(function(){ el('status').textContent = 'Ging nicht.'; b.disabled = false; });
+    });
+    d.appendChild(b);
+    box.appendChild(d);
+  }
+}
+
+function laden(){
+  el('status').textContent = 'Lade…';
+  rpc('getkong_moderation', { p_pin: el('pin').value })
+    .then(function(rows){ el('status').textContent = rows.length + ' Einträge'; zeichnen(rows); })
+    .catch(function(){ el('status').textContent = 'Keine Verbindung oder falscher PIN.'; });
+}
+
+el('laden').addEventListener('click', laden);
+el('pin').addEventListener('keydown', function(e){ if(e.key === 'Enter') laden(); });
+if(ausUrl) laden();
+</script>
+</body>
+</html>

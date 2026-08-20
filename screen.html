@@ -53,6 +53,8 @@
     background:var(--lime);color:#16281f;font-weight:700;font-size:.85em}
   .fuss{position:absolute;left:0;right:0;bottom:6px;text-align:center;
     font-size:10px;letter-spacing:.2em;text-transform:uppercase;opacity:.35}
+  .rechtlich{position:absolute;right:14px;bottom:6px;font-size:9px;letter-spacing:.1em;opacity:.3}
+  .rechtlich a{color:var(--paper);text-decoration:none}
   @media (max-width:900px){.raster{grid-template-columns:1fr;overflow-y:auto;height:auto}}
 </style>
 </head>
@@ -85,6 +87,10 @@
     </div>
   </div>
   <div class="fuss" id="fuss"></div>
+  <div class="rechtlich">
+    <a href="https://www.getkong.de/impressum" target="_blank" rel="noopener">Impressum</a> ·
+    <a href="https://www.getkong.de/datenschutz" target="_blank" rel="noopener">Datenschutz</a>
+  </div>
 </div>
 
 <script>
@@ -92,6 +98,7 @@ const SB_URL = 'https://iejuuattiqyymcbprxmu.supabase.co';
 const SB_KEY = 'sb_publishable_CGkLV2Y_A9cctjrhBckeEA_xRNfdWRU';
 const SEASON_START = '2026-08-15T12:30:00Z';
 const PLAETZE = 10;
+let VERSTECKT = true;   // wird abgeschaltet, falls die Spalte fehlt
 
 const el = id => document.getElementById(id);
 
@@ -135,9 +142,15 @@ function laden(){
   const ab = alleZeiten ? SEASON_START : heuteAb();
   el('titel').textContent = alleZeiten ? 'Bestenliste' : 'Tagesbeste';
   el('listenLabel').textContent = alleZeiten ? 'Beste Kuriere der Messe' : 'Beste Kuriere heute';
-  fetch(SB_URL + '/rest/v1/getkong_scores?select=name,dist&created_at=gte.' +
-        encodeURIComponent(ab) + '&order=dist.desc&limit=200', { headers: { apikey: SB_KEY } })
-    .then(r => r.ok ? r.json() : Promise.reject(r.status))
+  // Der Filter auf `versteckt` fliegt raus, sobald die Spalte fehlt — sonst
+  // bliebe der Monitor am Stand leer, nur weil ein SQL noch nicht gelaufen ist.
+  const basis = SB_URL + '/rest/v1/getkong_scores?select=name,dist&created_at=gte.' +
+        encodeURIComponent(ab) + '&order=dist.desc&limit=200';
+  fetch(basis + (VERSTECKT ? '&versteckt=is.false' : ''), { headers: { apikey: SB_KEY } })
+    .then(r => { if(r.ok) return r.json();
+      if(VERSTECKT){ VERSTECKT = false;
+        return fetch(basis, { headers: { apikey: SB_KEY } }).then(r2 => r2.ok ? r2.json() : Promise.reject(r2.status)); }
+      return Promise.reject(r.status); })
     .then(rohe => {
       zeichnen(bestenProName(rohe));
       el('fuss').textContent = 'Aktualisiert ' + new Date().toLocaleTimeString('de-DE',
