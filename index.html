@@ -750,8 +750,7 @@
         <div id="tonHinweis" hidden>Für Ton einmal ins Bild klicken</div>
       </div>
     </div>
-    <div class="legal">Fiktives Spiel. Wirf zuhause bitte kein Gemüse in fremde Fenster.
-    <span id="buildStempel"></span></div>
+    <div class="legal">Fiktives Spiel. Wirf zuhause bitte kein Gemüse in fremde Fenster.</div>
   </div>
 </div>
 
@@ -5036,12 +5035,11 @@ function renderMenuScores(list){
   let html = '';
   // Fünf leere Striche lesen sich wie ein Ladefehler. Beim echten Leerstand sagen,
   // dass die Liste offen ist — und den eigenen Bestwert daneben stellen.
-  if(!eintraege.length){
-    const eigen = parseInt(localStorage.getItem('gk_best') || '0', 10);
+  // Bei leerer Liste sprechen die freien Plätze für sich — der Satz darüber war
+  // eine Zeile Text zu viel. Nur wenn gar keine Verbindung steht, sagen wir es.
+  if(!eintraege.length && !list){
     html += '<div class="sdet" style="padding-left:0;opacity:.75">' +
-      (list ? 'Noch keine Schicht gefahren — Platz 1 ist frei'
-            : 'Bestenliste offline — dein Lauf zählt trotzdem') +
-      (eigen ? ' · dein Bester: ' + eigen.toLocaleString('de-DE') : '') + '</div>';
+      'Bestenliste offline — dein Lauf zählt trotzdem</div>';
   }
   for(let i = 0; i < zeilen; i++){
     const s = eintraege[i];
@@ -6990,9 +6988,12 @@ fernAbdunkeln(M.dash,     30, 130, 0.38);
 // Versionsstempel. Ohne den laesst sich nicht unterscheiden, ob eine Aenderung
 // nicht wirkt oder ob der Browser noch die alte Datei aus dem Cache zeigt —
 // GitHub Pages liefert index.html mit max-age=600 aus.
-const BUILD = 'B20 · 19.08. 04:30';
+const BUILD = 'B23 · 21.08.';
 window.BUILD = BUILD;
-(function(){ const f = el('buildStempel'); if(f) f.textContent = ' · ' + BUILD; })();
+// Der Stempel steht nicht mehr sichtbar auf der Seite — er war nur waehrend der
+// Cache-Sucherei noetig. Ueber die Konsole (window.BUILD) und im Diagnosefeld
+// unter ?debug=1 ist er weiter ablesbar.
+
 // ---------- Diagnose-Schalter (?debug=1) ----------
 // Ich kann den Fehler auf meinen Geraeten nicht sehen. Statt weiter zu raten:
 // jeder Verdaechtige einzeln abschaltbar, direkt im Spiel.
