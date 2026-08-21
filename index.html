@@ -196,6 +196,9 @@
     box-shadow:0 0 0 3px rgba(12,26,21,.7),0 0 40px rgba(194,230,126,.45);
     backdrop-filter:blur(4px)}
   #tutBox[hidden]{display:none}
+  #tutWeiter{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:9px;
+    font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;opacity:.72}
+  #tutWeiter .keycap{font-size:10px;padding:2px 8px}
   #tutBox.gut{border-color:#9bef3a;background:rgba(30,66,24,.92)}
   #tutFortschritt{font-family:var(--klein);font-size:10px;letter-spacing:.3em;
     color:var(--lime);opacity:.7}
@@ -778,6 +781,8 @@
     <div id="tutTitel"></div>
     <div id="tutTasten"></div>
     <div id="tutText"></div>
+    <!-- Wer es schon kann, klickt sich durch — am Pad mit A, sonst Enter. -->
+    <div id="tutWeiter"><span class="keycap" id="tutWeiterTaste">A</span><span>weiter</span></div>
   </div>
   <div class="corner" id="cTL">
     <div class="hudline" id="namezeile">
@@ -5553,6 +5558,14 @@ function tutZeigen(){
     return '<span class="keycap' + (k.length > 2 ? ' breit' : '') + '">' + k + '</span>';
   }).join('');
   el('tutFortschritt').textContent = (t.i + 1) + ' / ' + TUT_SCHRITTE.length;
+  const wt = el('tutWeiterTaste');
+  if(wt) wt.textContent = (gp && gp.pad) ? 'A' : 'Enter';
+}
+function tutWeiter(){
+  const t = S.tut; if(!t) return;
+  if(t.fertig > 0) return;              // Häkchen läuft schon
+  el('tutBox').classList.add('gut');
+  t.fertig = 0.35;                      // kurz zeigen, dann nächster Schritt
 }
 function tutUpdate(dt){
   const t = S.tut; if(!t) return;
@@ -5799,6 +5812,29 @@ function versuchAblegen(){
   });
 }
 var ergebnisGesendet = false, ergebnisSenden = null, ergebnisUhr = null;
+function ovNameUebernehmen(){
+  const f = el('ovNameInput'); if(!f) return;
+  const wert = (f.value || '').trim().substring(0, 18);
+  if(wert){
+    S.playerName = wert;
+    try{ localStorage.setItem('getkong-name', wert); }catch(e){}
+  }
+}
+(function(){
+  const f = el('ovNameInput');
+  if(f){
+    f.addEventListener('input', ovNameUebernehmen);
+    f.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ e.preventDefault(); const r = el('retryBtn'); if(r) r.click(); }
+      e.stopPropagation();   // Leertaste/Pfeile sollen hier tippen, nicht das Spiel steuern
+    });
+  }
+  const w = el('ovNameWuerfel');
+  if(w) w.addEventListener('click', function(){
+    const n = zufallsName(); if(f) f.value = n; S.playerName = n;
+    try{ localStorage.setItem('getkong-name', n); }catch(e){}
+  });
+})();
 function schichtEnde(){
   S.mode = 'over';
   S.tut = null;
@@ -5873,7 +5909,7 @@ function schichtEnde(){
     });
   };
   clearTimeout(ergebnisUhr);
-  ergebnisUhr = setTimeout(ergebnisSenden, 25000);
+  ergebnisUhr = setTimeout(ergebnisSenden, 12000);
   updateBestLine();
   setMusicVol(0.22);
   ui.over.style.display = 'flex';
@@ -6407,6 +6443,7 @@ addEventListener('keydown', e=>{
   // Swoosh beim Lenken entfernt — auf Wunsch raus
   if(e.code === 'Space') jumpPressed();
   if(e.code === 'Enter' && S.mode !== 'play') stufeWeiter();
+  if(e.code === 'Enter' && S.mode === 'play' && S.tut) tutWeiter();
 });
 addEventListener('keyup', e=>{ keys[e.code] = false; });
 // Zwei Stufen vor dem Spiel: erst die Ansage allein, dann die Bestenliste.
@@ -6475,6 +6512,10 @@ const bOver = el('overBoardBtn'); if(bOver) bOver.addEventListener('click', func
 // Bestenliste und Anmeldung zurück. Am Stand wartet der Nächste, und die
 // Runde soll bewusst mit einem Namen beginnen, nicht aus Versehen weiterlaufen.
 el('retryBtn').addEventListener('click', function(){
+  // Der Lauf geht jetzt in die Liste — mit dem Namen, der im Feld steht.
+  // Vorher wartete nur der 25-s-Timer; wer früher klickte, verlor den Lauf.
+  ovNameUebernehmen();
+  if(typeof ergebnisSenden === 'function') ergebnisSenden();
   ui.over.style.display = 'none';
   ui.hud.style.display = 'none';
   ui.menu.style.display = '';
@@ -6625,7 +6666,10 @@ function pollGamepad(){
   // A springt und liefert. B ist die Weiter-Taste: aus dem Menü in den Lauf,
   // von der Ergebniskarte zurück zum Start — am Stand reicht damit ein Knopf.
   flanke('jump', on(0), function(){
-    if(S.mode === 'play') jumpPressed(); else weiterTaste();
+    if(S.mode === 'play'){
+      jumpPressed();
+      if(S.tut) tutWeiter();            // A klickt die Einführung durch
+    } else weiterTaste();
   });
   flanke('weiter', on(1), weiterTaste);
   // Start pausiert im Spiel und startet im Menü. Vorher tat Start während des
