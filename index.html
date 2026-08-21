@@ -277,6 +277,17 @@
     gap:clamp(20px,4vw,60px);width:100%;max-width:min(660px,92vw)}
   #markeSpalte{display:flex;flex-direction:column;align-items:center;gap:2px;
     width:100%;margin-bottom:clamp(6px,1.6vh,18px)}
+  /* Stufe 1: nur Titel, Preis und ein Knopf. Alles gross, weil sonst nichts da ist. */
+  #menu.stufe1 #menuinner{justify-content:center}
+  #menu.stufe1 #preisZeile{font-size:clamp(16px,2.3vw,28px);margin-top:clamp(12px,2.4vh,24px)}
+  #menu.stufe1 #preisZeile b{font-size:1.08em;padding:.38em 1.1em;margin-top:8px}
+  #menu #markeSpalte #ansageBtn{margin-top:clamp(18px,3.4vh,34px);width:min(460px,80vw);font-size:clamp(15px,1.7vw,20px)}
+  #menu.stufe2 #ansageBtn{display:none}
+  #menu.stufe2 #preisZeile{font-size:clamp(12px,1.3vw,16px);margin-top:6px}
+  #menu.stufe2 #preisZeile b{font-size:.95em;padding:.25em .8em;margin-top:2px}
+  #menu.stufe2 .wordmark{width:min(420px,38vw)}
+  #menu.stufe2 h1.runner{font-size:clamp(26px,4.6vw,58px)}
+  #menuGrid[hidden]{display:none}
 
   /* Der Preis trägt den Bildschirm: zwei Zeilen, die zweite ist die Ansage. */
   #preisZeile{margin:clamp(8px,1.6vh,16px) 0 0;text-align:center;
@@ -395,15 +406,15 @@
   @keyframes errshake2{0%,100%{transform:translateX(0)}
     25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
 
-  #menu #startBtn{transform:none;width:100%;margin:0;
+  #menu #startBtn, #menu #ansageBtn{transform:none;width:100%;margin:0;
     background:var(--lime);color:#16281f;
     font-family:var(--klein);font-weight:700;font-size:17px;letter-spacing:.2em;
     text-transform:uppercase;border:3px solid #16281f;border-radius:16px;padding:.8em 1em;
     box-shadow:0 6px 0 #16281f, 0 0 32px rgba(194,230,126,.7), 0 18px 28px -12px rgba(6,16,12,.8);
     transition:transform .07s, box-shadow .07s;animation:pulseBtn 1.9s ease-in-out infinite}
   @keyframes pulseBtn{0%,100%{filter:brightness(1)}50%{filter:brightness(1.14)}}
-  #menu #startBtn:active{transform:translateY(5px);box-shadow:0 1px 0 #16281f}
-  #menu #startBtn:focus-visible{outline:3px solid #fdf8ea;outline-offset:3px}
+  #menu #startBtn:active, #menu #ansageBtn:active{transform:translateY(5px);box-shadow:0 1px 0 #16281f}
+  #menu #startBtn:focus-visible, #menu #ansageBtn:focus-visible{outline:3px solid #fdf8ea;outline-offset:3px}
 
   /* Steuerung als Tastenbild statt als Satz: eine Kappe je Taste, daneben die
      Funktion. Turbo und Kanone stehen nicht mehr da — sie zuenden von allein. */
@@ -860,9 +871,12 @@
            Deshalb steht er direkt unter dem Titel, nicht im Kleingedruckten. -->
       <p id="preisZeile">Beat the Highscore<br><b>and win the GETKONG Bike</b></p>
       <div id="scheinNo" hidden>Nr. <span id="scheinNr">0001</span></div>
+      <!-- Stufe 1: nur die Ansage. Dieser Knopf klappt die Bestenliste auf,
+           erst der zweite "Los geht's" darunter startet die Fahrt. -->
+      <button class="btn" id="ansageBtn">Los geht&rsquo;s</button>
     </div>
 
-    <div id="menuGrid">
+    <div id="menuGrid" hidden>
 
       <div id="karteSpalte">
         <!-- Kein Vorschalten mehr: Bestenliste sehen, losfahren. Der Name wird
@@ -5235,7 +5249,7 @@ function sbSubmit(punkte, cb){
       method: 'POST',
       headers: { apikey: SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
       body: JSON.stringify({
-        name: (S.playerName || '—').substring(0, 14),
+        name: (S.playerName || '—').substring(0, 18),
         dist: wert,                  // Punkte — danach wird gerankt
         deliveries: S.deliveries,
         // ACHTUNG: `level` hat in Supabase ein CHECK zwischen 1 und 10. Hier
@@ -6384,17 +6398,36 @@ function jumpPressed(){
 // ---------- Input ----------
 addEventListener('keydown', e=>{
   if(e.target && e.target.tagName === 'INPUT'){
-    if(e.code === 'Enter' || e.key === 'Enter'){ startGame(); }
+    if(e.code === 'Enter' || e.key === 'Enter'){ stufeWeiter(); }
     return; // Tippen nicht hijacken
   }
   if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space'].includes(e.code)) e.preventDefault();
   keys[e.code] = true;
   // Swoosh beim Lenken entfernt — auf Wunsch raus
   if(e.code === 'Space') jumpPressed();
-  if(e.code === 'Enter' && S.mode !== 'play') startGame();
+  if(e.code === 'Enter' && S.mode !== 'play') stufeWeiter();
 });
 addEventListener('keyup', e=>{ keys[e.code] = false; });
-el('startBtn').addEventListener('click', startGame);
+// Zwei Stufen vor dem Spiel: erst die Ansage allein, dann die Bestenliste.
+// Jeder Auslöser — Knopf, Enter, Controller — schaltet eine Stufe weiter;
+// erst aus Stufe 2 heraus startet die Fahrt. So sieht jeder den Preis groß,
+// bevor die Liste ihn ablenkt, und die Liste, bevor er losfährt.
+var menuStufe = 1;
+function stufeSetzen(n){
+  menuStufe = n;
+  const m = el('menu'); if(!m) return;
+  m.classList.toggle('stufe1', n === 1);
+  m.classList.toggle('stufe2', n === 2);
+  const grid = el('menuGrid'); if(grid) grid.hidden = (n !== 2);
+}
+function stufeWeiter(){
+  if(S.mode !== 'menu') { startGame(); return; }
+  if(menuStufe === 1){ stufeSetzen(2); return; }
+  startGame();
+}
+stufeSetzen(1);
+el('ansageBtn').addEventListener('click', stufeWeiter);
+el('startBtn').addEventListener('click', stufeWeiter);
 // Die Flipkarte ist entfallen — es gibt nur noch eine Seite. Der Haken bleibt,
 // weil andere Stellen ihn nach dem Lauf aufrufen.
 window.zurueckZurTafel = function(){};
@@ -6432,6 +6465,7 @@ el('retryBtn').addEventListener('click', function(){
   ui.hud.style.display = 'none';
   ui.menu.style.display = '';
   S.mode = 'menu';
+  stufeSetzen(1);
   menuVideoPlay();
   if(window.zurueckZurTafel) zurueckZurTafel();
   menuModus(MENU_MODUS || 'heute');
@@ -6583,7 +6617,7 @@ function pollGamepad(){
   // Start pausiert im Spiel und startet im Menü. Vorher tat Start während des
   // Spiels nichts — pausieren ging nur an der Tastatur.
   flanke('start', on(9) || on(16) || on(8), function(){
-    if(S.mode === 'play') pauseUmschalten(); else startGame();
+    if(S.mode === 'play') pauseUmschalten(); else stufeWeiter();
   });
   // Quadrat/Dreieck: Kanone von Hand, falls Munition da ist
   flanke('feuer', on(2) || on(3), function(){ if(S.mode === 'play' && S.ammo > 0 && !S.autoFire) startAutoFire(); });
