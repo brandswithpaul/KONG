@@ -512,7 +512,7 @@
     padding:16px}
   #over::before{content:'';position:absolute;inset:0;
     background:linear-gradient(rgba(10,24,20,.62), rgba(8,20,16,.80))}
-  #overCard{position:relative;z-index:2;width:min(400px,94vw);max-height:94vh;overflow-y:auto;
+  #overCard{position:relative;z-index:2;width:min(760px,94vw);max-height:94vh;overflow-y:auto;
     background:rgba(16,32,26,.9);border:3px solid var(--lime);border-radius:24px;
     box-shadow:0 0 0 3px rgba(12,26,21,.8), 0 0 38px rgba(194,230,126,.5),
       0 0 80px rgba(194,230,126,.2), 0 30px 50px -18px rgba(4,12,9,.85);
@@ -535,7 +535,26 @@
     font-variant-numeric:tabular-nums}
   #overCard .ovStats span{font-family:var(--klein);font-size:8px;letter-spacing:.14em;
     text-transform:uppercase;opacity:.55}
-  #overCard .ovBoard{margin-top:12px;font-family:var(--klein);font-size:11.5px;text-align:left}
+  #overCard .ovGrid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(14px,2.2vw,28px);
+    margin-top:14px;text-align:left;align-items:start}
+  #overCard .ovSpalte{min-width:0}
+  #overCard .ovLabel{font-family:var(--klein);font-size:9px;letter-spacing:.24em;
+    text-transform:uppercase;color:var(--lime);opacity:.85;margin-bottom:8px}
+  /* Die drei Versuche: der beste steht oben und ist hervorgehoben, die anderen
+     darunter in der gefahrenen Reihenfolge. */
+  #overCard .vRow{display:flex;align-items:baseline;gap:8px;padding:5px 0;
+    font-family:var(--klein);font-size:12.5px;color:#fdf8ea;
+    border-bottom:1px solid rgba(253,248,234,.08);font-variant-numeric:tabular-nums}
+  #overCard .vRow .vNr{width:7.4em;flex:none;opacity:.55;font-size:.78em;
+    letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+  #overCard .vRow .vFill{flex:1;border-bottom:1px dotted rgba(253,248,234,.22);
+    transform:translateY(-3px);min-width:8px}
+  #overCard .vRow .vPunkte{flex:none;font-weight:700}
+  #overCard .vRow.best{color:var(--lime);font-weight:700;
+    text-shadow:0 0 12px rgba(194,230,126,.45)}
+  #overCard .vRow.best .vNr{opacity:.85;color:var(--lime)}
+  #overCard .ovBoard{margin-top:0;font-family:var(--klein);font-size:11.5px;text-align:left}
+  @media (max-width:560px){ #overCard .ovGrid{grid-template-columns:1fr} }
   #overCard .ovBoard .stitle{font-size:9px;letter-spacing:.22em;text-transform:uppercase;
     opacity:.5;margin-bottom:5px;text-align:center}
   #overCard .ovBoard .srow{display:flex;align-items:baseline;gap:7px;padding:2.5px 0;
@@ -864,14 +883,23 @@
     <div class="ovName" id="ovName">—</div>
     <div class="ovScore"><span id="finalDist">0 m</span></div>
     <div class="ovRank" id="ovRank">Platz wird ermittelt…</div>
-    <div class="ovStats">
-      <div><b id="finalMeters">0 m</b><span>gefahren</span></div>
-
-      <div><b id="finalDel">0</b><span>Lieferungen</span></div>
-      <div><b id="finalCoins">0</b><span>Brokkoli</span></div>
-      <div><b id="finalLvl">1</b><span>Level</span></div>
+    <!-- Zwei Spalten: links was DU gefahren bist, rechts wo das landet. -->
+    <div class="ovGrid">
+      <div class="ovSpalte">
+        <div class="ovLabel">Deine drei Versuche</div>
+        <div id="ovVersuche"></div>
+        <div class="ovStats">
+          <div><b id="finalMeters">0 m</b><span>gefahren</span></div>
+          <div><b id="finalDel">0</b><span>Lieferungen</span></div>
+          <div><b id="finalCoins">0</b><span>Brokkoli</span></div>
+          <div><b id="finalLvl">1</b><span>Level</span></div>
+        </div>
+      </div>
+      <div class="ovSpalte">
+        <div class="ovLabel">Bestenliste heute</div>
+        <div class="ovBoard" id="scores"></div>
+      </div>
     </div>
-    <div class="ovBoard" id="scores"></div>
     <div class="ovQuip" id="overQuip">—</div>
     <div class="ovBtns">
       <button class="btn" id="retryBtn">Zum Start</button>
@@ -5346,6 +5374,7 @@ function resetGame(){
   S.speed = CFG.startSpeed; S.targetSpeed = CFG.startSpeed;
   S.dist = 0; S.deliveries = 0; S.level = 1;
   S.score = 0; S.mult = 1; S.tricks = 0; S.lives = CFG.lives;
+  S.versuche = []; S.versuchAbgelegt = false;
   updateMultHUD();
   S.xp = 0; S.coins = 0; S.streak = 0; S.ammo = 0;
   S.turbo = 0; S.turboActive = null; S.autoFire = null; aura.visible = false;
@@ -5656,6 +5685,7 @@ function gameOver(){
   // der nächste Versuch beginnt bei null. Am Ende zählt der beste der drei.
   S.lives--;
   rumble(320, 1.0, 0.6);            // Crash spürt man im Pad
+  versuchAblegen();
   S.bestRun = Math.max(S.bestRun, S.score);
   updateLivesHUD();
   sfxCrash();
@@ -5664,10 +5694,12 @@ function gameOver(){
   if(S.lives > 0){
     S.mode = 'crash';
     crashEinblenden(function(){
-      const leben = S.lives, bester = S.bestRun;
+      const leben = S.lives, bester = S.bestRun, bisher = S.versuche;
       resetGame();               // wirklich von vorn: Punkte, Meter, Level, Serie
       S.lives = leben;
       S.bestRun = bester;
+      S.versuche = bisher;       // resetGame leert die Liste sonst
+      S.versuchAbgelegt = false; // der neue Versuch darf wieder ablegen
       updateLivesHUD();
       initRecordTracker();
       S.mode = 'play';
@@ -5682,25 +5714,46 @@ function gameOver(){
 // hinten — bei zehn Läufen von "paul" stand man auf Platz 11 statt Platz 2.
 function sbRang(score, cb){
   try{
-    fetch(SB_URL + '/rest/v1/getkong_scores?select=name&versteckt=is.false&created_at=gte.' +
-      encodeURIComponent(heuteAb()) + '&dist=gt.' + Math.floor(score) + '&limit=1000', {
-      headers: { apikey: SB_KEY }
-    }).then(function(r){ return r.ok ? r.json() : Promise.reject(r.status); })
-      .then(function(liste){
+    // Über holeScores, damit auch hier der Filter auf `versteckt` wegfällt,
+    // solange die Spalte fehlt. Ohne das lieferte die Abfrage 400 und auf der
+    // Ergebniskarte stand statt des Platzes nur "Ergebnis gespeichert".
+    holeScores(SB_URL + '/rest/v1/getkong_scores?select=name&created_at=gte.' +
+      encodeURIComponent(heuteAb()) + '&dist=gt.' + Math.floor(score) + '&limit=1000',
+      function(liste){
         const namen = new Set();
         for(const z of (liste || [])) namen.add((z.name || '—').trim().toUpperCase());
         namen.delete((S.playerName || '—').trim().toUpperCase());   // sich selbst nicht überholen
         cb(namen.size + 1);
-      })
-      .catch(function(){ cb(null); });
+      },
+      function(){ cb(null); });
   }catch(e){ cb(null); }
 }
 
+// Jeder Versuch wird einzeln festgehalten, nicht nur der beste Wert. Ohne die
+// Liste liesse sich am Ende nicht zeigen, was die drei Anläufe gebracht haben —
+// und ein Rechenfehler beim Bestwert fiele niemandem auf.
+function versuchAblegen(){
+  if(!Array.isArray(S.versuche)) S.versuche = [];
+  // Nur einmal je Versuch: gameOver und schichtEnde können beide feuern.
+  if(S.versuchAbgelegt) return;
+  S.versuchAbgelegt = true;
+  S.versuche.push({
+    punkte: Math.floor(S.score),
+    meter: Math.floor(S.dist),
+    lieferungen: S.deliveries,
+    brokkoli: S.coins,
+    level: S.level
+  });
+}
 function schichtEnde(){
   S.mode = 'over';
   S.tut = null;
   const tb = el('tutBox'); if(tb) tb.hidden = true;
-  S.bestRun = Math.max(S.bestRun, S.score);
+  versuchAblegen();
+  // Der Bestwert kommt aus der Liste, nicht aus einem mitlaufenden Maximum:
+  // eine Quelle statt zwei, die auseinanderlaufen können.
+  const alle = (S.versuche || []).map(function(v){ return v.punkte; });
+  S.bestRun = alle.length ? Math.max.apply(null, alle) : Math.floor(S.score);
   const finale = S.bestRun;
   // Persönlicher Rekord überlebt den Tab — die Bestenliste zeigt ihn im Leerstand
   try{
@@ -5723,6 +5776,30 @@ function schichtEnde(){
   sbRang(finale, function(rang){
     el('ovRank').textContent = rang ? ('Platz ' + rang + ' heute') : 'Ergebnis gespeichert';
   });
+  // Die drei Versuche zeichnen: bester oben, danach die anderen in der
+  // gefahrenen Reihenfolge.
+  (function(){
+    const box = el('ovVersuche');
+    if(!box) return;
+    const liste = (S.versuche || []).map(function(v, i){ return {v: v, nr: i + 1}; });
+    if(!liste.length){ box.innerHTML = ''; return; }
+    const bestPunkte = Math.max.apply(null, liste.map(function(e){ return e.v.punkte; }));
+    let bestGesetzt = false;
+    const sortiert = liste.slice().sort(function(a2, b2){
+      // Der Bestwert nach oben, der Rest bleibt in der Reihenfolge des Laufs.
+      if(a2.v.punkte === bestPunkte && !bestGesetzt) return -1;
+      if(b2.v.punkte === bestPunkte) return 1;
+      return a2.nr - b2.nr;
+    });
+    box.innerHTML = sortiert.map(function(e){
+      const ist = e.v.punkte === bestPunkte && !bestGesetzt;
+      if(ist) bestGesetzt = true;
+      return '<div class="vRow' + (ist ? ' best' : '') + '">' +
+        '<span class="vNr">' + (ist ? '★ Versuch ' + e.nr : 'Versuch ' + e.nr) + '</span>' +
+        '<span class="vFill"></span>' +
+        '<span class="vPunkte">' + e.v.punkte.toLocaleString('de-DE') + ' m</span></div>';
+    }).join('');
+  })();
   const res = saveScore(finale, S.deliveries);
   renderScores(res.top, res.entry);
   const ownDist = Math.floor(finale);
