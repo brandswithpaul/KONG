@@ -282,8 +282,11 @@
     width:100%;margin-bottom:clamp(6px,1.6vh,18px)}
   /* Stufe 1: nur Titel, Preis und ein Knopf. Alles gross, weil sonst nichts da ist. */
   #menu.stufe1 #menuinner{justify-content:center}
-  #menu.stufe1 #preisZeile{font-size:clamp(16px,2.3vw,28px);margin-top:clamp(12px,2.4vh,24px)}
-  #menu.stufe1 #preisZeile b{font-size:1.08em;padding:.38em 1.1em;margin-top:8px}
+  /* Ansage-Bildschirm: die Marke tritt zurück, der Preis ist der Bildschirm. */
+  #menu.stufe1 .wordmark{width:min(390px,35vw)}
+  #menu.stufe1 h1.runner{font-size:clamp(19px,4.3vw,58px);letter-spacing:.22em;-webkit-text-stroke-width:3px}
+  #menu.stufe1 #preisZeile{font-size:clamp(22px,4.2vw,54px);margin-top:clamp(18px,3.6vh,40px);line-height:1.2;letter-spacing:.06em}
+  #menu.stufe1 #preisZeile b{font-size:1.12em;padding:.34em 1em;margin-top:14px;letter-spacing:.04em;line-height:1.15}
   #menu #markeSpalte #ansageBtn{margin-top:clamp(18px,3.4vh,34px);width:min(460px,80vw);font-size:clamp(15px,1.7vw,20px)}
   #menu.stufe2 #ansageBtn{display:none}
   #menu.stufe2 #preisZeile{font-size:clamp(12px,1.3vw,16px);margin-top:6px}
@@ -874,11 +877,11 @@
       <h1 class="runner">Runner</h1>
       <!-- Der Preis ist der Grund, warum am Stand jemand stehenbleibt.
            Deshalb steht er direkt unter dem Titel, nicht im Kleingedruckten. -->
-      <p id="preisZeile">Beat the Highscore<br><b>and win the GETKONG Bike</b></p>
+      <p id="preisZeile">Set the Highscore<br><b>for your chance to win our Bike</b></p>
       <div id="scheinNo" hidden>Nr. <span id="scheinNr">0001</span></div>
       <!-- Stufe 1: nur die Ansage. Dieser Knopf klappt die Bestenliste auf,
            erst der zweite "Los geht's" darunter startet die Fahrt. -->
-      <button class="btn" id="ansageBtn">Los geht&rsquo;s</button>
+      <button class="btn" id="ansageBtn">Let&rsquo;s Go</button>
     </div>
 
     <div id="menuGrid" hidden>
@@ -898,7 +901,7 @@
           </div>
         </div>
 
-        <button class="btn" id="startBtn">Los geht&rsquo;s</button>
+        <button class="btn" id="startBtn">Let&rsquo;s Go</button>
 
         <div class="tasten" id="ctrlKeys">
           <div class="treihe">
@@ -5103,16 +5106,21 @@ function zeitFilter(modus){
 // 'heute', 'messe' oder 'alle' — der Startbildschirm merkt sich die Wahl.
 var MENU_MODUS = 'heute';
 function sbFetchTop(cb){
+  const lokal = lokalAlsListe(MENU_MODUS);
   try{
     holeScores(SB_URL + '/rest/v1/getkong_scores?select=name,dist,deliveries,level'
       + zeitFilter(MENU_MODUS) + '&order=dist.desc&limit=200',
       function(list){
-        // auch im Menü: ein Name, ein Platz
-        globalTop = (typeof bestenProName === 'function') ? bestenProName(list) : list;
+        // auch im Menü: ein Name, ein Platz — Netz und lokal zusammen
+        globalTop = listenVereinen(list, lokal);
         if(cb) cb(globalTop);
       },
-      function(){ if(cb) cb(null); });
-  }catch(e){ if(cb) cb(null); }
+      function(){
+        // Kein Netz: die lokale Liste ist die Liste. Leer ist sie nur am ersten Tag.
+        globalTop = listenVereinen([], lokal);
+        if(cb) cb(globalTop);
+      });
+  }catch(e){ globalTop = listenVereinen([], lokal); if(cb) cb(globalTop); }
 }
 // ---------- Bestenliste: Screen mit Heute/Alle Zeiten und Nachladen ----------
 const BOARD = {modus: 'heute', seite: 0, proSeite: 10, eintraege: [], amEnde: false, laeuft: false};
@@ -5243,28 +5251,96 @@ function kontakteSenden(){
     if(r.ok){ try{ localStorage.removeItem('gk_kontakte'); }catch(e){} }
   }).catch(function(){ kontaktLaeuft = false; });
 }
+
+// ---------- Lokale Bestenliste: die Basis, die ohne Netz funktioniert ----------
+// Jeder Lauf landet sofort hier im Browser. Supabase kommt obendrauf: klappt der
+// Versand, wird der Eintrag als gesendet markiert, klappt er nicht, wird er beim
+// nächsten Start nachgeschickt. So überlebt die Liste am Stand jeden WLAN-Ausfall
+// und Besucher sehen ihren Lauf sofort — nicht erst, wenn die Antwort zurück ist.
+const LOKAL_KEY = 'gk_laeufe';
+function lokalLaden(){
+  try{ return JSON.parse(localStorage.getItem(LOKAL_KEY) || '[]'); }catch(e){ return []; }
+}
+function lokalSpeichern(liste){
+  try{ localStorage.setItem(LOKAL_KEY, JSON.stringify(liste.slice(-2000))); }catch(e){}
+}
+function lokalEintragen(eintrag){
+  const liste = lokalLaden();
+  liste.push(eintrag);
+  lokalSpeichern(liste);
+}
+// Einträge, die noch nicht bei Supabase angekommen sind, erneut senden
+function outboxLeeren(){
+  const liste = lokalLaden();
+  const offen = liste.filter(function(e){ return !e.gesendet; });
+  if(!offen.length) return;
+  offen.forEach(function(e){
+    fetch(SB_URL + '/rest/v1/getkong_scores', {
+      method: 'POST',
+      headers: { apikey: SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ name: e.name, dist: e.dist, deliveries: e.deliveries, level: e.level })
+    }).then(function(r){
+      if(!r.ok) return;
+      const akt = lokalLaden();
+      const z = akt.find(function(x){ return x.id === e.id; });
+      if(z){ z.gesendet = true; lokalSpeichern(akt); }
+    }).catch(function(){});
+  });
+}
+// Lokale Läufe in das Format der Supabase-Liste bringen, passend zum Zeitfilter
+function lokalAlsListe(modus){
+  const ab = (modus === 'alle') ? 0
+           : (modus === 'messe') ? Date.parse(MESSE_START)
+           : Date.parse(heuteAb());
+  const bis = (modus === 'messe') ? Date.parse(MESSE_ENDE) : Infinity;
+  return lokalLaden()
+    .filter(function(e){ return e.ts >= ab && e.ts < bis; })
+    .map(function(e){ return { name: e.name, dist: e.dist, deliveries: e.deliveries, level: e.level }; });
+}
+// Supabase-Liste und lokale Liste zusammenführen — ein Name, ein Platz
+function listenVereinen(fern, lokal){
+  const alle = (fern || []).concat(lokal || []);
+  alle.sort(function(a, b){ return b.dist - a.dist; });
+  const gesehen = {}, out = [];
+  for(const e of alle){
+    const k = String(e.name || '').toLowerCase();
+    if(gesehen[k]) continue;
+    gesehen[k] = true; out.push(e);
+  }
+  return out;
+}
 function sbSubmit(punkte, cb){
   // punkte ist der beste der fuenf Versuche. Vorher stand hier S.score — das
   // war der Punktestand des LETZTEN Lebens. Wer im dritten Versuch 2.757 holte
   // und im fuenften nach 108 m verunglueckte, landete mit 108 in der Liste,
   // waehrend die Ergebniskarte 2.757 zeigte.
   const wert = Math.floor((punkte === undefined || punkte === null) ? S.score : punkte);
+  const eintrag = {
+    id: Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+    ts: Date.now(),
+    name: (S.playerName || '—').substring(0, 18),
+    dist: wert,                  // Punkte — danach wird gerankt
+    deliveries: S.deliveries,
+    // `level` hat in Supabase ein CHECK zwischen 1 und 10 — hier das echte Level.
+    level: Math.max(1, Math.min(10, S.level || 1)),
+    gesendet: false
+  };
+  // Zuerst lokal: der Lauf ist damit sicher, egal was das Netz macht.
+  lokalEintragen(eintrag);
+  if(cb) cb(true);               // die Oberfläche wartet nicht aufs Netz
   try{
     fetch(SB_URL + '/rest/v1/getkong_scores', {
       method: 'POST',
       headers: { apikey: SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-      body: JSON.stringify({
-        name: (S.playerName || '—').substring(0, 18),
-        dist: wert,                  // Punkte — danach wird gerankt
-        deliveries: S.deliveries,
-        // ACHTUNG: `level` hat in Supabase ein CHECK zwischen 1 und 10. Hier
-        // standen die gefahrenen Meter — jeder Lauf über 10 m wurde mit
-        // HTTP 400 abgewiesen, seit dem 17.08. kam nichts mehr in der Tabelle
-        // an. Bis eine Spalte `meters` existiert, geht hier das echte Level rein.
-        level: Math.max(1, Math.min(10, S.level || 1))
-      })
-    }).then(function(){ if(cb) cb(true); }).catch(function(){ if(cb) cb(false); });
-  }catch(e){ if(cb) cb(false); }
+      body: JSON.stringify({ name: eintrag.name, dist: eintrag.dist,
+                             deliveries: eintrag.deliveries, level: eintrag.level })
+    }).then(function(r){
+      if(!r.ok) return;
+      const akt = lokalLaden();
+      const z = akt.find(function(x){ return x.id === eintrag.id; });
+      if(z){ z.gesendet = true; lokalSpeichern(akt); }
+    }).catch(function(){});        // bleibt offen, outboxLeeren() holt es nach
+  }catch(e){}
 }
 // Der Startbildschirm zeigt die volle Liste, nicht nur fünf Plätze — am Stand
 // will man sehen, wo man landet, bevor man fährt.
@@ -5372,6 +5448,16 @@ function updateBestLine(){
 // beim ersten Laden von allein auf "Alle Zeiten" — eine leere Tafel am Stand
 // sieht aus, als waere die Bestenliste kaputt.
 var menuFallbackGeprueft = false;
+// Links/Rechts im Menü wechselt die Bestenlisten-Tabs — per Pfeiltaste,
+// Steuerkreuz oder Stick. Mehr gibt es im Menü nicht zu navigieren; der
+// Weiter-Knopf liegt auf A, B, Enter und Start.
+const MENU_TABS = ['heute', 'messe', 'alle'];
+function menuTabSchritt(richtung){
+  if(S.mode !== 'menu' || menuStufe !== 2) return;
+  const i = MENU_TABS.indexOf(MENU_MODUS || 'heute');
+  const n = (i + richtung + MENU_TABS.length) % MENU_TABS.length;
+  menuModus(MENU_TABS[n]);
+}
 function menuModus(m, cb){
   MENU_MODUS = m;
   updateBestLine();
@@ -5735,6 +5821,8 @@ function startGame(){
   });
 }
 var tutErzwungen = false;
+// Beim Start und danach alle 90 s: was offline gespeichert wurde, nachsenden
+try{ outboxLeeren(); setInterval(outboxLeeren, 90000); }catch(e){}
 // Vibration, wo das Pad sie kann (Chrome: vibrationActuator)
 function rumble(dauer, stark, schwach){
   try{
@@ -6443,6 +6531,8 @@ addEventListener('keydown', e=>{
   // Swoosh beim Lenken entfernt — auf Wunsch raus
   if(e.code === 'Space') jumpPressed();
   if(e.code === 'Enter' && S.mode !== 'play') stufeWeiter();
+  if(S.mode === 'menu' && e.code === 'ArrowLeft')  menuTabSchritt(-1);
+  if(S.mode === 'menu' && e.code === 'ArrowRight') menuTabSchritt(1);
   if(e.code === 'Enter' && S.mode === 'play' && S.tut) tutWeiter();
 });
 addEventListener('keyup', e=>{ keys[e.code] = false; });
@@ -6665,6 +6755,9 @@ function pollGamepad(){
   // ab, ohne dass jemand am Pad umschalten muss.
   // A springt und liefert. B ist die Weiter-Taste: aus dem Menü in den Lauf,
   // von der Ergebniskarte zurück zum Start — am Stand reicht damit ein Knopf.
+  // Im Menü: ein Ausschlag = ein Tab-Schritt (Flanke, sonst rauscht es durch)
+  flanke('menuLinks',  gp.achse < -0.5, function(){ menuTabSchritt(-1); });
+  flanke('menuRechts', gp.achse >  0.5, function(){ menuTabSchritt(1); });
   flanke('jump', on(0), function(){
     if(S.mode === 'play'){
       jumpPressed();
