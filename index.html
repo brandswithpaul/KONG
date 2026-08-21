@@ -375,26 +375,16 @@
   /* Eingabefelder nur als Outline: gefuellt war das Namensfeld genauso stark
      wie der Startknopf — zwei gleich laute Elemente. Jetzt fuehrt allein
      LET'S GO. */
-  #menu #nameInput, #menu #realInput, #menu #mailInput{transform:none;margin:0;width:100%;
+  #menu #nameInput{transform:none;margin:0;width:100%;
     background:rgba(12,26,20,.35);border:3px solid var(--lime);border-radius:16px;
     color:#fdf8ea;font-family:var(--klein);font-weight:700;letter-spacing:.16em;
     padding:.66em .9em;font-size:17px;text-align:center;text-transform:uppercase;
     box-shadow:0 0 22px rgba(194,230,126,.28)}
   /* Username fuehrt, die beiden Kontaktfelder sind leiser gesetzt */
-  #menu #realInput, #menu #mailInput{font-size:15px;letter-spacing:.08em;
-    text-transform:none;border-width:2px;border-color:rgba(194,230,126,.5)}
-  #menu #nameInput::placeholder, #menu #realInput::placeholder, #menu #mailInput::placeholder{color:rgba(253,248,234,.42)}
-  #menu #nameInput:focus, #menu #realInput:focus, #menu #mailInput:focus{
+  #menu #nameInput::placeholder{color:rgba(253,248,234,.42)}
+  #menu #nameInput:focus{
     background:rgba(194,230,126,.12);box-shadow:0 0 0 4px rgba(194,230,126,.35)}
   #menu #nameInput.err{border-color:#c0432f;animation:errshake2 .3s}
-  #menu #mailInput{transform:none;margin:0;width:100%;
-    background:rgba(12,26,20,.35);border:2px solid rgba(194,230,126,.55);border-radius:16px;
-    color:#fdf8ea;font-family:var(--klein);font-size:15px;letter-spacing:.04em;
-    padding:.62em .9em;text-align:center}
-  #menu #mailInput::placeholder{color:rgba(253,248,234,.42)}
-  #menu #mailInput:focus{outline:none;background:rgba(194,230,126,.12);
-    box-shadow:0 0 0 4px rgba(194,230,126,.3)}
-  #menu #mailInput.err{border-color:#c0432f;animation:errshake2 .3s}
   #menu #codeStatus{font-family:var(--klein);font-size:11px;letter-spacing:.06em;
     min-height:1.2em;color:var(--lime);opacity:.9;text-align:center}
   #menu #codeStatus.warte{opacity:.55}
@@ -5671,12 +5661,10 @@ function zufallsName(){
 function startGame(){
   // Kein Vorschalten: Wer auf Start drückt, fährt. Der Name wird zugelost und
   // kann nach der Runde geändert werden — vorher tippt am Stand niemand gern.
-  let name = '';
-  try{ name = localStorage.getItem('getkong-name') || ''; }catch(e){}
-  if(!name){
-    name = zufallsName();
-    try{ localStorage.setItem('getkong-name', name); }catch(e){}
-  }
+  // Jeder Lauf bekommt einen frischen Namen. Am Stand spielt derselbe Browser
+  // den ganzen Tag für immer neue Leute — ein gemerkter Name wäre der der
+  // Person davor. Wer seinen Namen behalten will, ändert ihn nach dem Lauf.
+  const name = zufallsName();
   S.playerName = name.substring(0, 18);
   // E-Mail-Anmeldung und Kontakt-Warteschlange sind entfallen: es wird nichts
   // mehr abgefragt, was den Start aufhält.
@@ -6621,15 +6609,6 @@ addEventListener('gamepadconnected', function(e){
   showControllerHint(true);
   // Pad-Eingaben wecken den Ton nicht — Hinweis einblenden, falls er schläft
   setTimeout(tonHinweis, 50);
-  // Ohne Tastatur am Stand: Name aus dem Speicher reicht zum Starten
-  if(!el('nameInput').value){
-    // Am Pad zaehlt der zuletzt benutzte Code, sonst der gemerkte Name.
-    try{
-      el('nameInput').value = localStorage.getItem('gk_code') ||
-                              localStorage.getItem('getkong-name') || '';
-      codePruefen();
-    }catch(err){}
-  }
 });
 addEventListener('gamepaddisconnected', function(){
   const noch = navigator.getGamepads ? [].slice.call(navigator.getGamepads()).filter(Boolean).length : 0;
@@ -7302,23 +7281,6 @@ applyOverlayPattern();
 // Der Knopf "Wie geht das?" ist raus — die Einführung läuft beim ersten Mal auf
 // einem Gerät ohnehin automatisch mit. Erzwingen geht weiter über die Konsole:
 // tutErzwungen = true; startGame().
-// Das Namensfeld im Menü ist entfallen — der Name wird zugelost und erst
-// auf der Ergebniskarte gezeigt.
-(function(){
-  const inp = el('nameInput');
-  if(!inp) return;
-  inp.addEventListener('input', codePruefen);
-  // Wer sich auf demselben Gerät angemeldet hat, findet seinen Code schon drin.
-  try{
-    const merk = localStorage.getItem('gk_code');
-    if(merk && !inp.value){ inp.value = merk; codePruefen(); }
-  }catch(e){}
-  if(/^\d{4}$/.test(inp.value)) codePruefen();
-})();
-try{
-  el('realInput').value = localStorage.getItem('getkong-real') || '';
-  el('mailInput').value = localStorage.getItem('getkong-mail') || '';
-}catch(e){}
 // Erst hier, ganz am Ende: `for(const k in M) M[k] = toonifyDeep(M[k])` tauscht
 // die Materialien gegen neue Objekte aus. Wer den Hook vorher setzt, haengt ihn
 // an ein Material, das niemand mehr benutzt.
