@@ -273,31 +273,36 @@
 
   /* Zwei Spalten: links die Marke, rechts die Karte. Auf schmalen Schirmen
      untereinander — dort ist die Karte das Wichtigere und steht deshalb oben. */
-  #menuGrid{display:grid;grid-template-columns:1fr 1fr;align-items:center;
-    gap:clamp(20px,4vw,60px);width:100%;max-width:1180px}
-  #markeSpalte{display:flex;flex-direction:column;align-items:center;gap:2px}
+  #menuGrid{display:grid;grid-template-columns:1fr;align-items:center;justify-items:center;
+    gap:clamp(20px,4vw,60px);width:100%;max-width:min(660px,92vw)}
+  #markeSpalte{display:flex;flex-direction:column;align-items:center;gap:2px;
+    width:100%;margin-bottom:clamp(6px,1.6vh,18px)}
+
+  /* Der Preis trägt den Bildschirm: zwei Zeilen, die zweite ist die Ansage. */
+  #preisZeile{margin:clamp(8px,1.6vh,16px) 0 0;text-align:center;
+    font-family:var(--font);color:#fdf8ea;font-weight:600;
+    font-size:clamp(13px,1.7vw,21px);letter-spacing:.13em;text-transform:uppercase;
+    line-height:1.42;text-shadow:0 2px 10px rgba(8,20,16,.85)}
+  #preisZeile b{display:inline-block;margin-top:3px;color:#16281f;font-weight:800;
+    background:var(--lime);border-radius:999px;padding:.3em .95em;letter-spacing:.1em;
+    box-shadow:0 6px 20px rgba(194,230,126,.34)}
   #karteSpalte{display:flex;flex-direction:column;align-items:stretch;gap:clamp(10px,1.8vh,18px);
-    perspective:1600px}
+    width:100%}
 
   /* Die Karte dreht sich um ihre eigene Achse. Beide Seiten liegen deckungs-
      gleich übereinander; sichtbar ist nur die, die zur Kamera zeigt. */
-  #flipper{position:relative;width:100%;height:clamp(320px,52vh,520px);
-    transform-style:preserve-3d;transition:transform .75s cubic-bezier(.4,.05,.2,1)}
-  #flipper.gedreht{transform:rotateY(180deg)}
-  .kartenseite{position:absolute;inset:0;backface-visibility:hidden;
-    -webkit-backface-visibility:hidden;display:flex;flex-direction:column}
-  .kartenseite.hinten{transform:rotateY(180deg)}
+  #karte{position:relative;width:100%;min-height:clamp(300px,46vh,480px);display:flex;flex-direction:column}
   #menu #startBtn{animation:none}
   #menu .btn.zurueck{background:none;color:var(--lime);border:2px solid rgba(194,230,126,.45);
     box-shadow:none;font-size:12px;letter-spacing:.16em;padding:.55em 1em;margin-top:2px}
 
-  #menu .wordmark{display:block;width:min(520px,44vw);height:auto;margin:0 auto;
+  #menu .wordmark{display:block;width:min(780px,70vw);height:auto;margin:0 auto;
     filter:drop-shadow(0 14px 26px rgba(8,20,16,.75))}
   /* RUNNER traegt breiter als das Logo: groesse Stufe plus weite Sperrung.
      Der gruene Schein kommt aus zwei weichen Schatten, nicht aus einem Filter —
      so bleibt die dunkle Kontur scharf. */
   #menu h1.runner{font-family:var(--font);color:#fdf8ea;font-weight:900;font-style:italic;
-    font-size:clamp(34px,6.4vw,88px);letter-spacing:.22em;text-transform:uppercase;
+    font-size:clamp(38px,8.6vw,116px);letter-spacing:.24em;text-transform:uppercase;
     margin:2px 0 0;line-height:1;
     /* Die Sperrung setzt hinter den letzten Buchstaben noch einen Abstand, den
        man nicht sieht — der Schriftzug rutscht dadurch nach rechts. Gemessen:
@@ -400,15 +405,15 @@
   @keyframes errshake2{0%,100%{transform:translateX(0)}
     25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
 
-  #menu #startBtn, #menu #flipBtn{transform:none;width:100%;margin:0;
+  #menu #startBtn{transform:none;width:100%;margin:0;
     background:var(--lime);color:#16281f;
     font-family:var(--klein);font-weight:700;font-size:17px;letter-spacing:.2em;
     text-transform:uppercase;border:3px solid #16281f;border-radius:16px;padding:.8em 1em;
     box-shadow:0 6px 0 #16281f, 0 0 32px rgba(194,230,126,.7), 0 18px 28px -12px rgba(6,16,12,.8);
     transition:transform .07s, box-shadow .07s;animation:pulseBtn 1.9s ease-in-out infinite}
   @keyframes pulseBtn{0%,100%{filter:brightness(1)}50%{filter:brightness(1.14)}}
-  #menu #startBtn:active, #menu #flipBtn:active{transform:translateY(5px);box-shadow:0 1px 0 #16281f}
-  #menu #startBtn:focus-visible, #menu #flipBtn:focus-visible{outline:3px solid #fdf8ea;outline-offset:3px}
+  #menu #startBtn:active{transform:translateY(5px);box-shadow:0 1px 0 #16281f}
+  #menu #startBtn:focus-visible{outline:3px solid #fdf8ea;outline-offset:3px}
 
   /* Steuerung als Tastenbild statt als Satz: eine Kappe je Taste, daneben die
      Funktion. Turbo und Kanone stehen nicht mehr da — sie zuenden von allein. */
@@ -455,7 +460,6 @@
     #menu .mtab{font-size:9px;letter-spacing:.1em;padding:6px 11px}
     #menu .wordmark{width:min(260px,62vw)}
     #menu h1.runner{font-size:clamp(26px,9vw,40px);-webkit-text-stroke-width:3px}
-    #flipper{height:clamp(300px,54vh,460px)}
     #menu #menuScores{font-size:14px}
     #overCard{padding:16px 14px 14px}
     #overCard .ovGrid{grid-template-columns:1fr;gap:12px}
@@ -482,8 +486,7 @@
     #menu #menuScores .sdet{display:none}
     #menu .tasten,#menu .legal{display:none}
   }
-  @media (prefers-reduced-motion:reduce){.brok,#menu #startBtn,#menu #flipBtn{animation:none!important}
-    #flipper{transition:none!important}}
+  @media (prefers-reduced-motion:reduce){.brok,#menu #startBtn{animation:none!important}}
   .overlay h1{font-family:var(--font);font-weight:900;font-style:italic;font-size:clamp(38px,9vw,84px);
     letter-spacing:.04em;margin:18px 0 6px;text-transform:uppercase}
   .overlay h1.runner{font-weight:500;font-style:italic;text-transform:none;
@@ -537,7 +540,19 @@
       0 0 80px rgba(194,230,126,.2), 0 30px 50px -18px rgba(4,12,9,.85);
     padding:20px 20px 16px;text-align:center;color:#fdf8ea;font-family:var(--font)}
   #overCard .ovLogo{width:160px;display:block;margin:0 auto 12px}
-  #overCard .ovName{font-family:var(--klein);font-size:12px;letter-spacing:.26em;
+  #overCard .ovName{display:flex;align-items:center;justify-content:center;gap:6px}
+  #overCard #ovNameInput{font-family:var(--klein);font-size:13px;letter-spacing:.24em;
+    text-transform:uppercase;text-align:center;color:var(--lime);background:transparent;
+    border:1px dashed rgba(194,230,126,.35);border-radius:8px;padding:.34em .6em;
+    width:min(13em,60vw);outline:none;transition:.15s}
+  #overCard #ovNameInput:hover{border-color:rgba(194,230,126,.6)}
+  #overCard #ovNameInput:focus{border-style:solid;border-color:var(--lime);
+    background:rgba(194,230,126,.1)}
+  #overCard #ovNameWuerfel{background:transparent;border:1px solid rgba(194,230,126,.3);
+    color:var(--lime);border-radius:8px;width:2em;height:2em;font-size:13px;
+    cursor:pointer;line-height:1;transition:.15s}
+  #overCard #ovNameWuerfel:hover{border-color:var(--lime);background:rgba(194,230,126,.12)}
+  #overCard .ovNameAlt{font-family:var(--klein);font-size:12px;letter-spacing:.26em;
     text-transform:uppercase;color:var(--lime);margin-bottom:2px}
   #overCard .ovScore{font-weight:900;font-style:italic;line-height:1;
     font-size:clamp(48px,13vw,68px);letter-spacing:-.01em;
@@ -847,73 +862,58 @@
   <div class="brokrain l" id="rainL"></div>
   <div class="brokrain r" id="rainR"></div>
   <div id="menuinner">
+
+    <div id="markeSpalte">
+      <img class="wordmark" id="menuLogo" src="assets/getkong-logo-lime.svg" alt="GETKONG">
+      <h1 class="runner">Runner</h1>
+      <!-- Der Preis ist der Grund, warum am Stand jemand stehenbleibt.
+           Deshalb steht er direkt unter dem Titel, nicht im Kleingedruckten. -->
+      <p id="preisZeile">Beat the Highscore<br><b>and win the GETKONG Bike</b></p>
+      <div id="scheinNo" hidden>Nr. <span id="scheinNr">0001</span></div>
+    </div>
+
     <div id="menuGrid">
 
-      <div id="markeSpalte">
-        <img class="wordmark" id="menuLogo" src="assets/getkong-logo-lime.svg" alt="GETKONG">
-        <h1 class="runner">Runner</h1>
-        <div id="scheinNo" hidden>Nr. <span id="scheinNr">0001</span></div>
-      </div>
-
       <div id="karteSpalte">
-        <!-- Eine Karte, zwei Seiten: vorn die Bestenliste, hinten die Anmeldung.
-             Der Knopf dreht sie. So bleibt der Startbildschirm aufgeräumt und
-             man sieht immer nur das, was gerade dran ist. -->
-        <div id="flipper">
-          <div class="kartenseite vorne">
-            <div id="scoreCol">
-              <div id="bestRow">
-                <button class="mtab aktiv" id="mtabHeute">Heute</button>
-                <button class="mtab" id="mtabMesse">Cannafair</button>
-                <button class="mtab" id="mtabAlle">Alle Zeiten</button>
-              </div>
-              <div id="menuScores"></div>
+        <!-- Kein Vorschalten mehr: Bestenliste sehen, losfahren. Der Name wird
+             erst nach der Runde gefragt — in der Schlange am Stand zählt jede
+             Sekunde, und wer nichts erreicht hat, muss auch nichts eintragen. -->
+        <div id="karte">
+          <div id="scoreCol">
+            <div id="bestRow">
+              <button class="mtab aktiv" id="mtabHeute">Heute</button>
+              <button class="mtab" id="mtabMesse">Cannafair</button>
+              <button class="mtab" id="mtabAlle">Alle Zeiten</button>
             </div>
-          </div>
-
-          <div class="kartenseite hinten">
-            <div class="fieldbox">
-              <input id="nameInput" maxlength="14" placeholder="Username oder Code"
-                     autocomplete="off" spellcheck="false" inputmode="text">
-              <input id="mailInput" type="email" maxlength="120" placeholder="E-Mail-Adresse"
-                     autocomplete="email" inputmode="email" spellcheck="false">
-              <div id="codeStatus"></div>
-              <label class="dsgvo" id="dsgvoZeile">
-                <input type="checkbox" id="dsgvoOk" checked>
-                <span>E-Mails zu Produkten und Aktionen sind okay. Jederzeit widerrufbar.
-                  <a href="https://www.getkong.de/datenschutz" target="_blank" rel="noopener">Datenschutz</a></span>
-              </label>
-              <button class="btn" id="startBtn">Los geht's</button>
-              <input id="realInput" type="hidden" value="">
-              <div class="tasten" id="ctrlKeys">
-                <div class="treihe">
-                  <span class="keycap">&#9664;</span><span class="keycap">&#9654;</span>
-                  <span class="keycap">&#9650;</span><span class="keycap">&#9660;</span>
-                  <span class="keycap breit">Leertaste</span>
-                </div>
-                <div class="tlegende">Lenken · Gas · Bremse · Springen &amp; Liefern</div>
-              </div>
-              <div class="tasten" id="ctrlTouch" hidden>
-                <div class="treihe">
-                  <span class="keycap breit">Stick links</span><span class="keycap breit">Sprung rechts</span>
-                </div>
-                <div class="tlegende">Lenken · Springen &amp; Liefern · Gas gibt sich von allein</div>
-              </div>
-              <div class="tasten" id="ctrlPad" hidden>
-                <div class="treihe">
-                  <span class="keycap breit">Stick</span><span class="keycap">B</span>
-                  <span class="keycap breit">Start</span>
-                </div>
-                <div class="tlegende">Stick lenkt und gibt Gas · B springt &amp; liefert · Start pausiert</div>
-              </div>
-              <div id="padHint" hidden>Controller verbunden — <b>&#10005;</b> oder <b>Options</b></div>
-              <div id="tonHinweis" hidden>Für Ton einmal ins Bild klicken</div>
-              <button class="btn zurueck" id="flipZurueck">Bestenliste</button>
-            </div>
+            <div id="menuScores"></div>
           </div>
         </div>
 
-        <button class="btn" id="flipBtn">Let's Go</button>
+        <button class="btn" id="startBtn">Los geht&rsquo;s</button>
+
+        <div class="tasten" id="ctrlKeys">
+          <div class="treihe">
+            <span class="keycap">&#9664;</span><span class="keycap">&#9654;</span>
+            <span class="keycap">&#9650;</span><span class="keycap">&#9660;</span>
+            <span class="keycap breit">Leertaste</span>
+          </div>
+          <div class="tlegende">Lenken · Gas · Bremse · Springen &amp; Liefern</div>
+        </div>
+        <div class="tasten" id="ctrlTouch" hidden>
+          <div class="treihe">
+            <span class="keycap breit">Stick links</span><span class="keycap breit">Sprung rechts</span>
+          </div>
+          <div class="tlegende">Lenken · Springen &amp; Liefern · Gas gibt sich von allein</div>
+        </div>
+        <div class="tasten" id="ctrlPad" hidden>
+          <div class="treihe">
+            <span class="keycap breit">Stick</span><span class="keycap">B</span>
+            <span class="keycap breit">Start</span>
+          </div>
+          <div class="tlegende">Stick lenkt und gibt Gas · B springt &amp; liefert · Start pausiert</div>
+        </div>
+        <div id="padHint" hidden>Controller verbunden — <b>&#10005;</b> oder <b>Options</b></div>
+        <div id="tonHinweis" hidden>Für Ton einmal ins Bild klicken</div>
       </div>
 
     </div>
@@ -967,7 +967,13 @@
 <div class="overlay" id="over">
   <div id="overCard">
     <img class="ovLogo" src="assets/getkong-logo-lime.svg" alt="GETKONG">
-    <div class="ovName" id="ovName">—</div>
+    <!-- Der zugeloste Name steht hier und lässt sich antippen. Wer ihn ändert,
+         schreibt ihn direkt in die Bestenliste — ohne Extraschritt. -->
+    <div class="ovName">
+      <input id="ovNameInput" maxlength="18" spellcheck="false" autocomplete="off"
+             aria-label="Dein Name in der Bestenliste">
+      <button type="button" id="ovNameWuerfel" title="Neuen Namen auslosen">&#10227;</button>
+    </div>
     <div class="ovScore"><span id="finalDist">0 m</span></div>
     <div class="ovRank" id="ovRank">Platz wird ermittelt…</div>
     <!-- Zwei Spalten: links was DU gefahren bist, rechts wo das landet. -->
@@ -983,7 +989,7 @@
         </div>
       </div>
       <div class="ovSpalte">
-        <div class="ovLabel">Bestenliste heute</div>
+        <div class="ovLabel">Best Runners of the Day</div>
         <div class="ovBoard" id="scores"></div>
       </div>
     </div>
@@ -991,7 +997,6 @@
     <div class="ovBtns">
       <button class="btn" id="retryBtn">Zum Start</button>
       <button class="btn ghost" id="overBoardBtn">Bestenliste</button>
-      <button class="btn ghost" id="shareBtn">Teilen</button>
     </div>
     <div class="ovFoot" id="ovFoot">getkong.world · Cannafair</div>
   </div>
@@ -5303,7 +5308,7 @@ function renderMenuScores(list){
 function renderGlobal(list, ownDist){
   // Kommt nichts zurück (leerer Tag, Netz weg), steht wenigstens der eigene Lauf da
   if(!list || !list.length){
-    el('scores').innerHTML = '<div class="stitle">Tagesbeste Kuriere</div>' +
+    el('scores').innerHTML = '<div class="stitle">Best Runners of the Day</div>' +
       '<div class="srow new"><span class="rk">01</span>' +
       '<span class="sname">' + (S.playerName || '—').replace(/</g,'&lt;') + '</span>' +
       '<span class="fill"></span><span class="sc">' +
@@ -5319,7 +5324,7 @@ function renderGlobal(list, ownDist){
       '<span class="fill"></span>' +
       '<span class="sc">' + s.dist.toLocaleString('de-DE') + '</span></div>';
   }).join('');
-  el('scores').innerHTML = '<div class="stitle">Tagesbeste Kuriere</div>' + rows;
+  el('scores').innerHTML = '<div class="stitle">Best Runners of the Day</div>' + rows;
 }
 
 // ---------- Highscores ----------
@@ -5344,7 +5349,7 @@ function renderScores(top, entry){
       '<span>' + s.d.toLocaleString('de-DE') + ' m</span>' +
       '<span>' + s.del + ' Lief.</span></div>';
   }).join('');
-  el('scores').innerHTML = '<div class="stitle">Bestenliste</div>' + rows;
+  el('scores').innerHTML = '<div class="stitle">Best Runners of the Day</div>' + rows;
 }
 function updateBestLine(){
   // Die Ueberschrift ist jetzt der aktive Reiter
@@ -5647,93 +5652,40 @@ function codePruefen(){
       codeStatus('Keine Verbindung — es zählt, was hier steht.', 'fehler');
     });
 }
-function startGame(){
-  // Name ist Pflicht — kommt in die Bestenliste
-  const inp = el('nameInput');
-  let name = (inp.value || '').trim();
-  // Vier Ziffern sind ein Spielcode, kein Name — sonst stünde "4711" in der
-  // Bestenliste. Der aufgelöste Name gewinnt.
-  if(codeName && /^\d{4}$/.test(name)){
-    try{ localStorage.setItem('gk_code', name); }catch(e){}
-    name = codeName;
-  }
-  if(!name) name = localStorage.getItem('getkong-name') || '';
-  if(!name){
-    inp.classList.remove('err'); void inp.offsetWidth;
-    inp.classList.add('err');
-    inp.focus();
-    return;
-  }
-  const dsRow = el('dsgvoZeile'), dsBox = el('dsgvoOk');
-  const mailFeld = el('mailInput');
-  const mail = (mailFeld && mailFeld.value || '').trim();
-  const mitCode = !!(codeName && /^\d{4}$/.test((inp.value || '').trim()));
+// Zwei Listen ergeben 15x15 Namen — genug, dass sich an einem Messetag kaum
+// jemand doppelt. Bei Kollision hängt eine Nummer an. Kurz genug fuer die
+// Bestenliste (14 Zeichen), gross genug, um sich den eigenen Lauf zu merken.
+// Zehn Adjektive mal zehn Tiere ergibt 100 Namen — freundlich, merkbar und
+// ohne Tippen. Die längste Kombination ist FAITHFUL GIRAFFE mit 16 Zeichen,
+// deshalb liegt die Namensgrenze bei 18 statt bei 14.
+const NAME_ADJ = ['FUNNY','FAITHFUL','BRAVE','SPEEDY','CLEVER',
+                  'HUNGRY','SNEAKY','LUCKY','GRUMPY','MIGHTY'];
+const NAME_SUB = ['GIRAFFE','PENGUIN','OTTER','BADGER','FALCON',
+                  'TURTLE','PANDA','WOMBAT','LEMUR','MOOSE'];
+function zufallsName(){
+  const a = NAME_ADJ[(Math.random()*NAME_ADJ.length)|0];
+  const b = NAME_SUB[(Math.random()*NAME_SUB.length)|0];
+  return (a + ' ' + b).substring(0, 18);
+}
 
-  // Ohne E-Mail geht es nicht weiter — außer man kommt mit einem Spielcode:
-  // dann liegt die Adresse schon aus der Anmeldung am Handy vor und ein zweites
-  // Mal tippen wäre nur Zeitverlust in der Schlange.
-  if(!mitCode){
-    if(!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(mail)){
-      if(mailFeld){
-        mailFeld.classList.remove('err'); void mailFeld.offsetWidth;
-        mailFeld.classList.add('err'); mailFeld.focus();
-      }
-      codeStatus('E-Mail eintragen, dann geht es los.', 'fehler');
-      return;
-    }
-    if(dsBox && !dsBox.checked){
-      if(dsRow){ dsRow.classList.remove('err'); void dsRow.offsetWidth; dsRow.classList.add('err'); }
-      dsBox.focus();
-      codeStatus('Ohne Einverständnis geht es leider nicht.', 'fehler');
-      return;
-    }
+function startGame(){
+  // Kein Vorschalten: Wer auf Start drückt, fährt. Der Name wird zugelost und
+  // kann nach der Runde geändert werden — vorher tippt am Stand niemand gern.
+  let name = '';
+  try{ name = localStorage.getItem('getkong-name') || ''; }catch(e){}
+  if(!name){
+    name = zufallsName();
+    try{ localStorage.setItem('getkong-name', name); }catch(e){}
   }
-  if(dsRow) dsRow.classList.remove('err');
-  if(mailFeld) mailFeld.classList.remove('err');
-  S.playerName = name.substring(0, 14);
-  // Anmeldung vom Gerät aus: Wer hier eine Mail einträgt und keinen Code
-  // benutzt, wird im Hintergrund registriert. Das Spiel wartet NICHT auf die
-  // Antwort — am Stand darf ein hängender Request niemanden aufhalten.
-  (function(){
-    const mail = (el('mailInput') && el('mailInput').value || '').trim();
-    const istCode = /^\d{4}$/.test((el('nameInput').value || '').trim());
-    const ok = el('dsgvoOk') && el('dsgvoOk').checked;
-    if(!mail || istCode || !ok) return;
-    if(!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(mail)) return;
-    fetch(SB_URL + '/functions/v1/anmelden', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', apikey: SB_KEY, authorization: 'Bearer ' + SB_KEY },
-      body: JSON.stringify({ username: name.substring(0, 14), email: mail, consent: true })
-    }).then(function(r){ return r.json(); })
-      .then(function(d){ if(d && d.code) try{ localStorage.setItem('gk_code', d.code); }catch(e){} })
-      .catch(function(){});
-  })();
-  // Klarname und Mail gehen (noch) nicht an Supabase: die Tabelle
-  // getkong_scores hat nur name/dist/deliveries/level. Bis dort Spalten
-  // dafuer stehen, sammelt der Browser die Angaben in einer Warteschlange.
-  try{
-    const real = (el('realInput') && el('realInput').value || '').trim();
-    const mail = (el('mailInput') && el('mailInput').value || '').trim();
-    localStorage.setItem('getkong-real', real);
-    localStorage.setItem('getkong-mail', mail);
-    if(real || mail){
-      const liste = JSON.parse(localStorage.getItem('gk_kontakte') || '[]');
-      const key = (S.playerName + '|' + mail).toLowerCase();
-      if(!liste.some(function(k){ return (k.user + '|' + k.mail).toLowerCase() === key; })){
-        liste.push({user: S.playerName, real: real, mail: mail,
-                    zustimmung: !!(dsBox && dsBox.checked), ts: new Date().toISOString()});
-        localStorage.setItem('gk_kontakte', JSON.stringify(liste.slice(-500)));
-      }
-      kontakteSenden();
-    }
-  }catch(e){}
+  S.playerName = name.substring(0, 18);
+  // E-Mail-Anmeldung und Kontakt-Warteschlange sind entfallen: es wird nichts
+  // mehr abgefragt, was den Start aufhält.
   try{
     localStorage.setItem('getkong-name', S.playerName);
     const n = parseInt(localStorage.getItem('getkong-runs') || '0', 10) + 1;
     localStorage.setItem('getkong-runs', String(n));
     const f = el('scheinNr'); if(f) f.textContent = String(n + 1).padStart(4, '0');
   }catch(e){}
-  inp.classList.remove('err');
   menuVideoPause();
   resetGame();
   S.lives = CFG.lives;
@@ -5761,9 +5713,10 @@ function startGame(){
     // Beim allerersten Mal auf diesem Gerät läuft die Einführung mit. Wer sie
     // kennt, sieht sie nie wieder — am Stand spielt aber fast jeder zum ersten
     // Mal, deshalb ist sie die Voreinstellung und nicht der Sonderfall.
-    let kennt = false;
-    try{ kennt = localStorage.getItem('gk_tutorial') === '1'; }catch(e){}
-    if(!kennt || tutErzwungen){ tutErzwungen = false; tutStart(); }
+    // Am Messestand ist jeder Lauf der erste eines neuen Menschen — die
+    // Einführung läuft deshalb immer, nicht nur beim ersten Mal pro Gerät.
+    tutErzwungen = false;
+    tutStart();
   });
 }
 var tutErzwungen = false;
@@ -5868,7 +5821,7 @@ function schichtEnde(){
   el('finalLvl').textContent = S.level;
   ui.overTitle.textContent = OVER_TITLES[(Math.random()*OVER_TITLES.length)|0];
   ui.overQuip.textContent = QUIPS[(Math.random()*QUIPS.length)|0];
-  el('ovName').textContent = S.playerName || '—';
+  { const f = el('ovNameInput'); if(f) f.value = S.playerName || ''; }
   // Multiplikator ist raus — das Feld auf der Karte gibt es nicht mehr.
   el('ovRank').textContent = 'Platz wird ermittelt…';
   sbRang(finale, function(rang){
@@ -5901,12 +5854,23 @@ function schichtEnde(){
   const res = saveScore(finale, S.deliveries);
   renderScores(res.top, res.entry);
   const ownDist = Math.floor(finale);
-  sbSubmit(finale, function(){
-    sbFetchTop(function(list){
-      if(list){ renderMenuScores(list); }
-      if(list && S.mode === 'over'){ renderGlobal(list, ownDist); updateBestLine(); }
+  // Der Lauf geht erst in die Bestenliste, wenn der Name feststeht — sonst
+  // stünde dort der ausgeloste Name, den der Spieler gerade ändert.
+  // Ausgelöst wird das Senden beim Verlassen der Karte, spätestens nach 25 s.
+  ergebnisGesendet = false;
+  ergebnisSenden = function(){
+    if(ergebnisGesendet) return;
+    ergebnisGesendet = true;
+    clearTimeout(ergebnisUhr);
+    sbSubmit(finale, function(){
+      sbFetchTop(function(list){
+        if(list){ renderMenuScores(list); }
+        if(list && S.mode === 'over'){ renderGlobal(list, ownDist); updateBestLine(); }
+      });
     });
-  });
+  };
+  clearTimeout(ergebnisUhr);
+  ergebnisUhr = setTimeout(ergebnisSenden, 25000);
   updateBestLine();
   setMusicVol(0.22);
   ui.over.style.display = 'flex';
@@ -6443,21 +6407,9 @@ addEventListener('keydown', e=>{
 });
 addEventListener('keyup', e=>{ keys[e.code] = false; });
 el('startBtn').addEventListener('click', startGame);
-// Die Karte drehen: vorn Bestenliste, hinten Anmeldung. Nach dem Drehen springt
-// der Fokus ins Namensfeld — am Stand tippt man sonst zweimal.
-(function(){
-  const flipper = el('flipper'), vor = el('flipBtn'), zurueck = el('flipZurueck');
-  function drehen(an){
-    if(!flipper) return;
-    flipper.classList.toggle('gedreht', an);
-    if(vor) vor.style.visibility = an ? 'hidden' : '';
-    if(an) setTimeout(function(){ const n = el('nameInput'); if(n) n.focus(); }, 420);
-  }
-  if(vor) vor.addEventListener('click', function(){ drehen(true); });
-  if(zurueck) zurueck.addEventListener('click', function(){ drehen(false); });
-  // Zurück auf die Vorderseite, sobald das Menü wieder erscheint
-  window.zurueckZurTafel = function(){ drehen(false); };
-})();
+// Die Flipkarte ist entfallen — es gibt nur noch eine Seite. Der Haken bleibt,
+// weil andere Stellen ihn nach dem Lauf aufrufen.
+window.zurueckZurTafel = function(){};
 // ---------- Bestenliste: Knöpfe ----------
 el('tabHeute').addEventListener('click', function(){ boardModus('heute'); });
 el('tabMesse').addEventListener('click', function(){ boardModus('messe'); });
@@ -6496,20 +6448,7 @@ el('retryBtn').addEventListener('click', function(){
   if(window.zurueckZurTafel) zurueckZurTafel();
   menuModus(MENU_MODUS || 'heute');
 });
-el('shareBtn').addEventListener('click', function(){
-  const txt = S.playerName + ' hat ' + Math.floor(S.score).toLocaleString('de-DE') +
-    ' m bei GETKONG RUNNER geschafft — ' + Math.floor(S.dist).toLocaleString('de-DE') + ' m gefahren, ' +
-    S.deliveries + ' Lieferungen.';
-  const b = el('shareBtn');
-  if(navigator.share){
-    navigator.share({title:'GETKONG RUNNER', text: txt, url: location.href}).catch(function(){});
-  } else if(navigator.clipboard){
-    navigator.clipboard.writeText(txt + ' ' + location.href).then(function(){
-      const alt = b.textContent; b.textContent = 'Kopiert';
-      setTimeout(function(){ b.textContent = alt; }, 1600);
-    }).catch(function(){});
-  }
-});
+// Der Teilen-Knopf ist entfallen — am Stand teilt niemand vom Messerechner aus.
 
 // touch: drag steer, tap jump
 let touch = {active:false, startX:0, startT:0, lastX:0, moved:false};
@@ -6647,7 +6586,12 @@ function pollGamepad(){
   // jedem Pad im Nintendo-Layout) ist der untere Knopf mit B beschriftet und
   // landet je nach Modus auf Index 0 oder 1 — beide zu nehmen deckt alle Modi
   // ab, ohne dass jemand am Pad umschalten muss.
-  flanke('jump',  on(0) || on(1), function(){ if(S.mode === 'play') jumpPressed(); else startGame(); });
+  // A springt und liefert. B ist die Weiter-Taste: aus dem Menü in den Lauf,
+  // von der Ergebniskarte zurück zum Start — am Stand reicht damit ein Knopf.
+  flanke('jump', on(0), function(){
+    if(S.mode === 'play') jumpPressed(); else weiterTaste();
+  });
+  flanke('weiter', on(1), weiterTaste);
   // Start pausiert im Spiel und startet im Menü. Vorher tat Start während des
   // Spiels nichts — pausieren ging nur an der Tastatur.
   flanke('start', on(9) || on(16) || on(8), function(){
@@ -7358,7 +7302,8 @@ applyOverlayPattern();
 // Der Knopf "Wie geht das?" ist raus — die Einführung läuft beim ersten Mal auf
 // einem Gerät ohnehin automatisch mit. Erzwingen geht weiter über die Konsole:
 // tutErzwungen = true; startGame().
-el('nameInput').value = localStorage.getItem('getkong-name') || '';
+// Das Namensfeld im Menü ist entfallen — der Name wird zugelost und erst
+// auf der Ergebniskarte gezeigt.
 (function(){
   const inp = el('nameInput');
   if(!inp) return;
