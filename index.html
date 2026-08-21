@@ -5798,6 +5798,7 @@ function versuchAblegen(){
     level: S.level
   });
 }
+var ergebnisGesendet = false, ergebnisSenden = null, ergebnisUhr = null;
 function schichtEnde(){
   S.mode = 'over';
   S.tut = null;
@@ -6413,6 +6414,19 @@ addEventListener('keyup', e=>{ keys[e.code] = false; });
 // erst aus Stufe 2 heraus startet die Fahrt. So sieht jeder den Preis groß,
 // bevor die Liste ihn ablenkt, und die Liste, bevor er losfährt.
 var menuStufe = 1;
+// Die Weiter-Taste am Controller (A oder B) führt durch jeden Bildschirm,
+// der nicht die Fahrt ist: Pause auflösen, Bestenlisten-Vollansicht zu,
+// Ergebniskarte zum Start, Menüstufen weiter. Im Spiel selbst springt A.
+// Am Stand soll niemand zur Tastatur greifen müssen.
+function weiterTaste(){
+  try{
+    if(typeof pausiert !== 'undefined' && pausiert){ pauseUmschalten(false); return; }
+    const board = el('board');
+    if(board && board.style.display && board.style.display !== 'none'){ boardSchliessen(); return; }
+    if(S.mode === 'over'){ const r = el('retryBtn'); if(r) r.click(); return; }
+    if(S.mode === 'menu'){ stufeWeiter(); return; }
+  }catch(e){}
+}
 function stufeSetzen(n){
   menuStufe = n;
   const m = el('menu'); if(!m) return;
