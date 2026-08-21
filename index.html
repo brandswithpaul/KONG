@@ -298,7 +298,11 @@
      so bleibt die dunkle Kontur scharf. */
   #menu h1.runner{font-family:var(--font);color:#fdf8ea;font-weight:900;font-style:italic;
     font-size:clamp(34px,6.4vw,88px);letter-spacing:.22em;text-transform:uppercase;
-    margin:2px 0 0;line-height:1;padding-left:.2em;
+    margin:2px 0 0;line-height:1;
+    /* Die Sperrung setzt hinter den letzten Buchstaben noch einen Abstand, den
+       man nicht sieht — der Schriftzug rutscht dadurch nach rechts. Gemessen:
+       ohne Ausgleich liegt die Tintenmitte 6 px links der Kastenmitte, und
+       genau das braucht die Kursive, damit sie unter dem Logo sitzt. */
     -webkit-text-stroke:4px #16281f;paint-order:stroke fill;
     text-shadow:0 6px 0 rgba(10,24,18,.65),
                 0 0 26px rgba(194,230,126,.6),
@@ -385,6 +389,7 @@
   #menu #mailInput::placeholder{color:rgba(253,248,234,.42)}
   #menu #mailInput:focus{outline:none;background:rgba(194,230,126,.12);
     box-shadow:0 0 0 4px rgba(194,230,126,.3)}
+  #menu #mailInput.err{border-color:#c0432f;animation:errshake2 .3s}
   #menu #codeStatus{font-family:var(--klein);font-size:11px;letter-spacing:.06em;
     min-height:1.2em;color:var(--lime);opacity:.9;text-align:center}
   #menu #codeStatus.warte{opacity:.55}
@@ -428,7 +433,7 @@
   #menu .dsgvo input:checked::after{content:'';position:absolute;left:5px;top:1px;
     width:6px;height:11px;border:solid #16281f;border-width:0 3px 3px 0;transform:rotate(42deg)}
   #menu .dsgvo.err input{border-color:#c0432f;animation:errshake2 .3s}
-  #menu .legal{position:static;margin-top:7px;width:auto;text-align:center;
+  #menu .legal{position:static;margin-top:clamp(22px,5vh,54px);width:auto;text-align:center;
     font-family:var(--klein);color:#fdf8ea;opacity:.45;font-size:8px;letter-spacing:.06em;line-height:1.9}
   #menu .legal a{color:#fdf8ea;text-decoration:underline;text-underline-offset:2px;pointer-events:auto}
   #menu .legal a:hover{color:var(--lime)}
@@ -773,7 +778,6 @@
                   <a href="https://www.getkong.de/datenschutz" target="_blank" rel="noopener">Datenschutz</a></span>
               </label>
               <button class="btn" id="startBtn">Los geht's</button>
-              <div id="qrHinweis">Schon angemeldet? <b>Code oben eintippen</b></div>
               <input id="realInput" type="hidden" value="">
               <div class="tasten" id="ctrlKeys">
                 <div class="treihe">
@@ -5533,17 +5537,32 @@ function startGame(){
     inp.focus();
     return;
   }
-  // Zustimmung ist nur noetig, wenn Kontaktdaten dabei sind — wer nur einen
-  // Kuriernamen eintraegt, gibt nichts Persoenliches her und wird nicht gebremst.
   const dsRow = el('dsgvoZeile'), dsBox = el('dsgvoOk');
-  const willKontakt = ((el('realInput') && el('realInput').value || '').trim() ||
-                       (el('mailInput') && el('mailInput').value || '').trim());
-  if(willKontakt && dsBox && !dsBox.checked){
-    if(dsRow){ dsRow.classList.remove('err'); void dsRow.offsetWidth; dsRow.classList.add('err'); }
-    if(dsBox) dsBox.focus();
-    return;
+  const mailFeld = el('mailInput');
+  const mail = (mailFeld && mailFeld.value || '').trim();
+  const mitCode = !!(codeName && /^\d{4}$/.test((inp.value || '').trim()));
+
+  // Ohne E-Mail geht es nicht weiter — außer man kommt mit einem Spielcode:
+  // dann liegt die Adresse schon aus der Anmeldung am Handy vor und ein zweites
+  // Mal tippen wäre nur Zeitverlust in der Schlange.
+  if(!mitCode){
+    if(!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(mail)){
+      if(mailFeld){
+        mailFeld.classList.remove('err'); void mailFeld.offsetWidth;
+        mailFeld.classList.add('err'); mailFeld.focus();
+      }
+      codeStatus('E-Mail eintragen, dann geht es los.', 'fehler');
+      return;
+    }
+    if(dsBox && !dsBox.checked){
+      if(dsRow){ dsRow.classList.remove('err'); void dsRow.offsetWidth; dsRow.classList.add('err'); }
+      dsBox.focus();
+      codeStatus('Ohne Einverständnis geht es leider nicht.', 'fehler');
+      return;
+    }
   }
   if(dsRow) dsRow.classList.remove('err');
+  if(mailFeld) mailFeld.classList.remove('err');
   S.playerName = name.substring(0, 14);
   // Anmeldung vom Gerät aus: Wer hier eine Mail einträgt und keinen Code
   // benutzt, wird im Hintergrund registriert. Das Spiel wartet NICHT auf die
