@@ -6919,8 +6919,8 @@ let tlTimer = 0, tlGreen = true;
 
 function update(dt){
   // --- speed ---
-  const up = keys['ArrowUp'] || boostHeld || gp.gas;
-  const down = keys['ArrowDown'] || brakeHeld || gp.brake;
+  const up   = keys['ArrowUp']   || (!demo && (boostHeld || gp.gas));
+  const down = keys['ArrowDown'] || (!demo && (brakeHeld || gp.brake));
   if(up) S.targetSpeed = Math.min(CFG.maxSpeed, S.targetSpeed + CFG.accel*dt);
   // Grundtempo: je 200 m kommen 10 km/h dazu (2,78 m/s). Bremsen geht nur noch
   // bis zu dieser Schwelle — das Spiel zieht mit der Distanz von selbst an.
