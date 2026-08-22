@@ -5315,6 +5315,9 @@ function sbSubmit(punkte, cb){
   // und im fuenften nach 108 m verunglueckte, landete mit 108 in der Liste,
   // waehrend die Ergebniskarte 2.757 zeigte.
   const wert = Math.floor((punkte === undefined || punkte === null) ? S.score : punkte);
+  // Plausibilitaet: ueber 15.000 Punkte ist in einem Lauf nicht zu fahren. Solche
+  // Werte stammen aus Fehlern oder Manipulation und gehen nicht in die Liste.
+  if(wert > 15000 || wert < 0){ if(cb) cb(false); return; }
   const eintrag = {
     id: Date.now() + '-' + Math.random().toString(36).slice(2, 8),
     ts: Date.now(),
