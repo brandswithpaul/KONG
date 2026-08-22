@@ -982,7 +982,7 @@
     <!-- Der zugeloste Name steht hier und lässt sich antippen. Wer ihn ändert,
          schreibt ihn direkt in die Bestenliste — ohne Extraschritt. -->
     <div class="ovName">
-      <input id="ovNameInput" maxlength="18" spellcheck="false" autocomplete="off"
+      <input id="ovNameInput" maxlength="20" spellcheck="false" autocomplete="off"
              aria-label="Dein Name in der Bestenliste">
       <button type="button" id="ovNameWuerfel" title="Neuen Namen auslosen">&#10227;</button>
     </div>
@@ -5318,7 +5318,7 @@ function sbSubmit(punkte, cb){
   const eintrag = {
     id: Date.now() + '-' + Math.random().toString(36).slice(2, 8),
     ts: Date.now(),
-    name: (S.playerName || '—').substring(0, 18),
+    name: (S.playerName || '—').substring(0, 20),
     dist: wert,                  // Punkte — danach wird gerankt
     deliveries: S.deliveries,
     // `level` hat in Supabase ein CHECK zwischen 1 und 10 — hier das echte Level.
@@ -5837,14 +5837,19 @@ function codePruefen(){
 // Zehn Adjektive mal zehn Tiere ergibt 100 Namen — freundlich, merkbar und
 // ohne Tippen. Die längste Kombination ist FAITHFUL GIRAFFE mit 16 Zeichen,
 // deshalb liegt die Namensgrenze bei 18 statt bei 14.
-const NAME_ADJ = ['FUNNY','FAITHFUL','BRAVE','SPEEDY','CLEVER',
-                  'HUNGRY','SNEAKY','LUCKY','GRUMPY','MIGHTY'];
-const NAME_SUB = ['GIRAFFE','PENGUIN','OTTER','BADGER','FALCON',
-                  'TURTLE','PANDA','WOMBAT','LEMUR','MOOSE'];
+const NAME_ADJ = ['FUNNY','FAITHFUL','BRAVE','SPEEDY','CLEVER','LUCKY','MIGHTY',
+                  'HAPPY','JOLLY','SUNNY','COSMIC','GOLDEN','SHINY','NOBLE','SWIFT',
+                  'BOLD','MERRY','ZESTY','JAZZY','PLUCKY','DANDY','SNAPPY','PEPPY',
+                  'BREEZY','GROOVY','WITTY','CHEERY','MELLOW','SPARKLY','DAPPER'];
+const NAME_SUB = ['GIRAFFE','PENGUIN','OTTER','BADGER','FALCON','TURTLE','PANDA',
+                  'WOMBAT','LEMUR','MOOSE','KOALA','DOLPHIN','PARROT','LLAMA','GECKO',
+                  'PUFFIN','WALRUS','BEAVER','TOUCAN','MEERKAT','HEDGEHOG','NARWHAL',
+                  'QUOKKA','OCELOT','ALPACA','PELICAN','AXOLOTL','MANATEE','CHINCHILLA',
+                  'CAPYBARA'];
 function zufallsName(){
   const a = NAME_ADJ[(Math.random()*NAME_ADJ.length)|0];
   const b = NAME_SUB[(Math.random()*NAME_SUB.length)|0];
-  return (a + ' ' + b).substring(0, 18);
+  return (a + ' ' + b).substring(0, 20);
 }
 
 function startGame(){
@@ -5854,7 +5859,7 @@ function startGame(){
   // den ganzen Tag für immer neue Leute — ein gemerkter Name wäre der der
   // Person davor. Wer seinen Namen behalten will, ändert ihn nach dem Lauf.
   const name = zufallsName();
-  S.playerName = name.substring(0, 18);
+  S.playerName = name.substring(0, 20);
   // E-Mail-Anmeldung und Kontakt-Warteschlange sind entfallen: es wird nichts
   // mehr abgefragt, was den Start aufhält.
   try{
@@ -5978,7 +5983,7 @@ function versuchAblegen(){
 var ergebnisGesendet = false, ergebnisSenden = null, ergebnisUhr = null;
 function ovNameUebernehmen(){
   const f = el('ovNameInput'); if(!f) return;
-  const wert = (f.value || '').trim().substring(0, 18);
+  const wert = (f.value || '').trim().substring(0, 20);
   if(wert){
     S.playerName = wert;
     try{ localStorage.setItem('getkong-name', wert); }catch(e){}
