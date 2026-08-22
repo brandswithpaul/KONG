@@ -5567,6 +5567,7 @@ function crashEinblenden(fertig){
 
 // ---------- Game flow ----------
 function resetGame(){
+  demo = null;
   S.x = 0; S.y = 0; S.z = 0; S.vy = 0; S.grounded = true;
   if(schweif) schweif.spur.length = 0;      // Schweif nicht über den Neustart ziehen
   S.speed = CFG.startSpeed; S.targetSpeed = CFG.startSpeed;
@@ -5619,6 +5620,81 @@ const TUT_SCHRITTE = [
     tasten: ['▶', 'Leertaste'], lob: 'Das bringt die dicksten Punkte.',
     pruef: function(st, b){ return st.lieferungen - b.lieferungen >= 1; } }
 ];
+
+// ---------- Auto-Demo ----------
+// Läuft vor jedem Lauf von allein ab: der Fahrer lenkt links, rechts, springt,
+// macht den Doppelsprung, fährt zur Lieferzone und liefert. Niemand drückt
+// etwas — die Demo setzt dieselben Tasten, die der Spieler später setzt, und
+// die normale Steuerung liest sie. Danach wird übergeben.
+const DEMO = [
+  // [ab Sekunde, Aktion]           Aktion: Taste + Dauer oder Funktion
+  [0.2,  {titel:'Lenken',       text:'Links und rechts',        taste:'ArrowLeft',  dauer:0.45}],
+  [0.8,  {taste:'ArrowRight', dauer:0.7}],
+  [1.6,  {taste:'ArrowLeft',  dauer:0.35}],
+  [2.3,  {titel:'Springen',     text:'Über Autos hinweg',       tipp:true}],
+  [3.4,  {titel:'Doppelsprung', text:'In der Luft nochmal — 360', tipp:true}],
+  [3.62, {tipp:true}],
+  [4.6,  {titel:'Lieferzone',   text:'Rechts auf den grünen Streifen', zone:true}],
+  // Ab hier lenkt die Demo selbst zur Zone und liefert, sobald sie drauf ist
+];
+var demo = null;
+function demoStart(){
+  demo = { t: 0, i: 0, aktiv: [], zielX: null, geliefert: false, ende: false };
+  for(const c of cars) scene.remove(c.g); cars.length = 0;
+  // Lieferzone in Reichweite legen, damit die Demo sie sicher erreicht
+  S.nextCurbZ = S.z - 70;
+  const box = el('tutBox'); if(box){ box.hidden = false; box.classList.remove('gut'); }
+  el('tutWeiter').hidden = true;
+  el('tutFortschritt').textContent = 'DEMO';
+  demoZeige('Schau kurz zu', '');
+}
+function demoZeige(titel, text){
+  el('tutTitel').textContent = titel; el('tutText').textContent = text;
+  el('tutTasten').innerHTML = '';
+}
+function demoEnde(){
+  for(const k of ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown']) keys[k] = false;
+  demo = null;
+  const box = el('tutBox');
+  if(box){ box.classList.add('gut'); demoZeige('Du bist dran!', 'Jeder Meter zählt'); }
+  el('tutFortschritt').textContent = '';
+  setTimeout(function(){ if(box && !demo){ box.hidden = true; box.classList.remove('gut'); } }, 1400);
+  el('tutWeiter').hidden = false;
+}
+function demoUpdate(dt){
+  const d = demo; if(!d) return;
+  d.t += dt;
+  // Ruhe auf der Strecke
+  S.carTimer = 4; S.pedTimer = 4; nextSiteZ = S.z - 900; nextKuebelZ = S.z - 900;
+  S.lives = Math.max(S.lives, 3);
+  S.targetSpeed = Math.min(S.targetSpeed, 14);        // gemächlich, damit man es sieht
+
+  // Skript abarbeiten
+  while(d.i < DEMO.length && DEMO[d.i][0] <= d.t){
+    const a = DEMO[d.i][1]; d.i++;
+    if(a.titel) demoZeige(a.titel, a.text || '');
+    if(a.taste){ keys[a.taste] = true; d.aktiv.push({k:a.taste, bis:d.t + a.dauer}); }
+    if(a.tipp) jumpPressed();
+    if(a.zone) d.zielX = CFG.curbXmin + 1.2;
+  }
+  // Gedrückte Tasten nach ihrer Dauer loslassen
+  d.aktiv = d.aktiv.filter(function(e){ if(d.t >= e.bis){ keys[e.k] = false; return false; } return true; });
+
+  // Zur Zone lenken und liefern
+  if(d.zielX !== null && !d.geliefert){
+    const dx = d.zielX - S.x;
+    keys['ArrowRight'] = dx > 0.25; keys['ArrowLeft'] = dx < -0.25;
+    const curb = activeCurb();
+    if(curb && !curb.used && S.x > CFG.curbXmin - 0.4 && S.grounded){
+      keys['ArrowRight'] = keys['ArrowLeft'] = false;
+      jumpPressed();                                 // = deliver()
+      d.geliefert = true; d.endeAb = d.t + 1.1;
+      el('tutBox').classList.add('gut'); demoZeige('Lieferung!', 'Das bringt die dicksten Punkte');
+    }
+  }
+  // Sicherheitsnetz: falls die Zone nicht kommt, nach 9 s trotzdem übergeben
+  if((d.endeAb && d.t >= d.endeAb) || d.t > 9) demoEnde();
+}
 
 function tutStart(){
   S.tut = { i: 0, t: 0, gelenkt: 0, spruenge: 0, tricks: 0, brokkoli: 0, lieferungen: 0, fertig: 0 };
@@ -5817,7 +5893,7 @@ function startGame(){
     // Am Messestand ist jeder Lauf der erste eines neuen Menschen — die
     // Einführung läuft deshalb immer, nicht nur beim ersten Mal pro Gerät.
     tutErzwungen = false;
-    tutStart();
+    demoStart();
   });
 }
 var tutErzwungen = false;
@@ -6527,15 +6603,15 @@ addEventListener('keydown', e=>{
     return; // Tippen nicht hijacken
   }
   if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space'].includes(e.code)) e.preventDefault();
-  keys[e.code] = true;
+  if(!demo) keys[e.code] = true;
   // Swoosh beim Lenken entfernt — auf Wunsch raus
-  if(e.code === 'Space') jumpPressed();
+  if(e.code === 'Space' && !demo) jumpPressed();
   if(e.code === 'Enter' && S.mode !== 'play') stufeWeiter();
   if(S.mode === 'menu' && e.code === 'ArrowLeft')  menuTabSchritt(-1);
   if(S.mode === 'menu' && e.code === 'ArrowRight') menuTabSchritt(1);
   if(e.code === 'Enter' && S.mode === 'play' && S.tut) tutWeiter();
 });
-addEventListener('keyup', e=>{ keys[e.code] = false; });
+addEventListener('keyup', e=>{ if(!demo) keys[e.code] = false; });
 // Zwei Stufen vor dem Spiel: erst die Ansage allein, dann die Bestenliste.
 // Jeder Auslöser — Knopf, Enter, Controller — schaltet eine Stufe weiter;
 // erst aus Stufe 2 heraus startet die Fahrt. So sieht jeder den Preis groß,
@@ -6760,7 +6836,7 @@ function pollGamepad(){
   flanke('menuRechts', gp.achse >  0.5, function(){ menuTabSchritt(1); });
   flanke('jump', on(0), function(){
     if(S.mode === 'play'){
-      jumpPressed();
+      if(!demo) jumpPressed();
       if(S.tut) tutWeiter();            // A klickt die Einführung durch
     } else weiterTaste();
   });
@@ -6913,9 +6989,11 @@ function update(dt){
   // Tastatur bleibt digital, der Stick lenkt analog — feines Einfädeln zwischen
   // zwei Autos ist mit voller Ausschlagbreite kaum möglich.
   let steer = (keys['ArrowRight']?1:0) - (keys['ArrowLeft']?1:0);
-  if(!steer && stickZustand.x) steer = stickZustand.x;   // Daumen-Stick
-  if(!steer && gp.achse) steer = gp.achse;
-  else if(!steer) steer = (gp.right?1:0) - (gp.left?1:0);
+  if(!demo){                                              // in der Demo lenkt nur das Skript
+    if(!steer && stickZustand.x) steer = stickZustand.x;   // Daumen-Stick
+    if(!steer && gp.achse) steer = gp.achse;
+    else if(!steer) steer = (gp.right?1:0) - (gp.left?1:0);
+  }
   // Im Mega-Sprung darf gelenkt werden — sonst sind das zwei Sekunden Zuschauen
   S.x += steer * CFG.steerSpeed * (S.leap ? 0.75 : 1) * dt;
   // Für die Einführung: gefahrene Seitwärtsstrecke, nicht bloß "Taste gedrückt".
@@ -7111,6 +7189,7 @@ function update(dt){
   }
   manageCurbs();
   requisitenAusduennen();
+  if(demo) demoUpdate(dt);
   if(S.tut) tutUpdate(dt);
   // Zonen pulsieren + Chevrons laufen + Marker bounct, solange unbenutzt
   // E · Zustände: außerhalb ruhig, drin heller und schneller, danach erloschen.
