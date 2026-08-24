@@ -308,7 +308,26 @@
 
   /* Die Karte dreht sich um ihre eigene Achse. Beide Seiten liegen deckungs-
      gleich übereinander; sichtbar ist nur die, die zur Kamera zeigt. */
-  #karte{position:relative;width:100%;min-height:clamp(300px,46vh,480px);display:flex;flex-direction:column}
+  #karte{position:relative;width:100%;min-height:0;flex:1;display:flex;flex-direction:column}
+  /* Alles auf einem Schirm: die Spalte deckelt sich auf die Fensterhoehe,
+     nur die Liste selbst scrollt. Der Startknopf bleibt immer im Bild. */
+  #menuGrid{grid-template-columns:minmax(0,5fr) minmax(0,6fr);align-items:center;max-width:min(1180px,94vw)}
+  #karteSpalte{max-height:calc(100svh - clamp(24px,5vh,56px));min-height:0}
+  #menu #menuScores{max-height:min(40vh,430px)}
+  .namereihe{display:flex;gap:8px;align-items:stretch}
+  .namereihe #nameInput{flex:1;min-width:0}
+  #menu .btn.wuerfel{flex:none;width:52px;margin:0;padding:0;font-size:22px;line-height:1;
+    animation:none;transform:none}
+  /* Das E-Mail-Feld sah nach Browser-Rohzustand aus — gleiche Sprache wie der Username */
+  #menu #mailInput{transform:none;margin:0;width:100%;appearance:none;-webkit-appearance:none;
+    background:rgba(14,26,18,.72);border:2px solid rgba(194,230,126,.4);border-radius:12px;
+    color:#fdf8ea;font-family:var(--klein);font-size:15px;letter-spacing:.06em;
+    padding:.72em .9em;outline:none;transition:.15s}
+  #menu #mailInput::placeholder{color:rgba(253,248,234,.42)}
+  #menu #mailInput:focus{border-color:var(--lime);background:rgba(194,230,126,.1)}
+  #menu #mailInput.err{border-color:#c0432f;animation:errshake2 .3s}
+  #menu .dsgvo{font-size:11.5px;color:rgba(253,248,234,.78)}
+  #menu .dsgvo a{color:var(--lime)}
   #menu #startBtn{animation:none}
   #menu .btn.zurueck{background:none;color:var(--lime);border:2px solid rgba(194,230,126,.45);
     box-shadow:none;font-size:12px;letter-spacing:.16em;padding:.55em 1em;margin-top:2px}
@@ -475,6 +494,14 @@
     #overCard .btn{flex:1 1 40%;font-size:12px}
   }
   @media (max-width:820px){
+    #menuGrid{grid-template-columns:1fr;gap:10px}
+    #markeSpalte{margin-bottom:0}
+    #menu.stufe2 .wordmark{width:min(190px,44vw)}
+    #menu.stufe2 h1.runner{font-size:clamp(17px,5vw,26px)}
+    #menu.stufe2 #preisZeile{display:none}
+    #menu #menuScores{max-height:26svh}
+    #karteSpalte{max-height:calc(100svh - 16px)}
+
     #menuGrid{grid-template-columns:1fr}
     #markeSpalte{order:2}
     #karteSpalte{order:1}
@@ -768,6 +795,12 @@
     #menu .btn{padding:.5em .8em}
   }
 
+  #overCard{max-height:96svh;overflow-y:auto;overscroll-behavior:contain}
+  #overCard .ovBoard{max-height:30svh;overflow-y:auto}
+  #boardinner{max-height:100svh;box-sizing:border-box;overflow:hidden;
+    display:flex;flex-direction:column;align-items:center}
+  #boardListe{flex:1 1 auto;min-height:0;overflow-y:auto;max-height:none}
+  #board .wordmark{width:min(200px,40vw)}
 </style>
 </head>
 <body>
@@ -872,19 +905,17 @@
   <div class="brokrain r" id="rainR"></div>
   <div id="menuinner">
 
+    <div id="menuGrid" hidden>
+
     <div id="markeSpalte">
       <img class="wordmark" id="menuLogo" src="assets/getkong-logo-lime.svg" alt="GETKONG">
       <h1 class="runner">Runner</h1>
-      <!-- Der Preis ist der Grund, warum am Stand jemand stehenbleibt.
-           Deshalb steht er direkt unter dem Titel, nicht im Kleingedruckten. -->
       <p id="preisZeile">Set the Highscore<br><b>for your chance to win our Bike</b></p>
       <div id="scheinNo" hidden>Nr. <span id="scheinNr">0001</span></div>
-      <!-- Stufe 1: nur die Ansage. Dieser Knopf klappt die Bestenliste auf,
-           erst der zweite "Los geht's" darunter startet die Fahrt. -->
-      <button class="btn" id="ansageBtn">Let&rsquo;s Go</button>
+      <!-- Der Vorschalt-Schirm ist Geschichte; der Knopf bleibt nur, weil
+           Code auf ihn zeigt. Sichtbar wird er nie wieder. -->
+      <button class="btn" id="ansageBtn" hidden>Let&rsquo;s Go</button>
     </div>
-
-    <div id="menuGrid" hidden>
 
       <div id="karteSpalte">
         <!-- Kein Vorschalten mehr: Bestenliste sehen, losfahren. Der Name wird
@@ -902,8 +933,12 @@
         </div>
 
         <div class="fieldbox" id="startFelder">
-          <input id="nameInput" maxlength="20" placeholder="Dein Username"
-                 autocomplete="off" spellcheck="false">
+          <div class="namereihe">
+            <input id="nameInput" maxlength="20" placeholder="Dein Username"
+                   autocomplete="off" spellcheck="false">
+            <button type="button" class="btn wuerfel" id="nameWuerfel"
+                    title="Username auslosen">&#127922;</button>
+          </div>
           <input id="mailInput" type="email" maxlength="120" placeholder="E-Mail-Adresse"
                  autocomplete="email" inputmode="email" spellcheck="false">
           <label class="dsgvo" id="dsgvoZeile">
@@ -5939,12 +5974,12 @@ function startGame(){
   // Username und E-Mail sind wieder Pflicht — die Liste laeuft online weiter,
   // und ein Preis braucht eine erreichbare Person dahinter.
   const nameFeld = el('nameInput'), mailFeld = el('mailInput'), dsBox = el('dsgvoOk');
-  const name = ((nameFeld && nameFeld.value) || '').trim();
+  let name = ((nameFeld && nameFeld.value) || '').trim();
   const mail = ((mailFeld && mailFeld.value) || '').trim();
+  // Leer gelassen? Dann wird gewuerfelt — tippen ist erlaubt, kein Zwang.
   if(!name){
-    if(nameFeld){ nameFeld.classList.remove('err'); void nameFeld.offsetWidth;
-      nameFeld.classList.add('err'); nameFeld.focus(); }
-    return;
+    name = zufallsName();
+    if(nameFeld) nameFeld.value = name;
   }
   if(!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(mail)){
     if(mailFeld){ mailFeld.classList.remove('err'); void mailFeld.offsetWidth;
@@ -6764,12 +6799,16 @@ function stufeWeiter(){
     if(m) m.value = localStorage.getItem('getkong-mail') || '';
   }catch(e){}
   if(n && !n.value) n.placeholder = zufallsName();   // Vorschlag, kein Zwang
+  const w = el('nameWuerfel');
+  if(w) w.addEventListener('click', function(){
+    if(n){ n.value = zufallsName(); n.classList.remove('err'); }
+  });
   for(const f of [n, m]) if(f) f.addEventListener('keydown', function(e){
     if(e.key === 'Enter'){ e.preventDefault(); stufeWeiter(); }
     e.stopPropagation();
   });
 })();
-stufeSetzen(1);
+stufeSetzen(2);
 el('ansageBtn').addEventListener('click', stufeWeiter);
 el('startBtn').addEventListener('click', stufeWeiter);
 // Die Flipkarte ist entfallen — es gibt nur noch eine Seite. Der Haken bleibt,
