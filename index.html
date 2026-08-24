@@ -5144,8 +5144,9 @@ function heuteAb(){
 // des Vortags bis 22:00Z des letzten Tages.
 const MESSE_START = '2026-08-20T22:00:00Z';
 const MESSE_ENDE  = '2026-08-23T22:00:00Z';
-// "Aktuell" beginnt, wo die Messe endet — alles danach ist die laufende Liste.
-const AKTUELL_START = MESSE_ENDE;
+// "Aktuell" beginnt mit dem Neustart der Liste am 24.08. — alles davor liegt
+// nur noch unter "Alle Zeiten" bzw. im eingefrorenen Cannafair-Reiter.
+const AKTUELL_START = '2026-08-24T12:05:00Z';
 // Der Filter auf `versteckt` läuft ins Leere, solange die Spalte nicht
 // existiert — PostgREST antwortet dann mit 400 und die Tafel bliebe leer.
 // Deshalb wird beim ersten Fehlschlag einmal umgeschaltet und der Filter für
