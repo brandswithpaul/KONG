@@ -893,7 +893,7 @@
         <div id="karte">
           <div id="scoreCol">
             <div id="bestRow">
-              <button class="mtab aktiv" id="mtabHeute">Heute</button>
+              <button class="mtab aktiv" id="mtabHeute">Aktuell</button>
               <button class="mtab" id="mtabMesse">Cannafair</button>
               <button class="mtab" id="mtabAlle">Alle Zeiten</button>
             </div>
@@ -901,6 +901,17 @@
           </div>
         </div>
 
+        <div class="fieldbox" id="startFelder">
+          <input id="nameInput" maxlength="20" placeholder="Dein Username"
+                 autocomplete="off" spellcheck="false">
+          <input id="mailInput" type="email" maxlength="120" placeholder="E-Mail-Adresse"
+                 autocomplete="email" inputmode="email" spellcheck="false">
+          <label class="dsgvo" id="dsgvoZeile">
+            <input type="checkbox" id="dsgvoOk" checked>
+            <span>E-Mails zu Produkten und Aktionen sind okay. Jederzeit widerrufbar.
+              <a href="https://www.getkong.de/datenschutz" target="_blank" rel="noopener">Datenschutz</a></span>
+          </label>
+        </div>
         <button class="btn" id="startBtn">Let&rsquo;s Go</button>
 
         <div class="tasten" id="ctrlKeys">
@@ -947,7 +958,7 @@
     <img class="wordmark" id="boardLogo" src="assets/getkong-logo-lime.svg" alt="GETKONG">
     <h2 id="boardTitel">Bestenliste</h2>
     <div id="boardTabs">
-      <button class="btabs aktiv" id="tabHeute">Heute</button>
+      <button class="btabs aktiv" id="tabHeute">Aktuell</button>
       <button class="btabs" id="tabMesse">Cannafair</button>
       <button class="btabs" id="tabAlle">Alle Zeiten</button>
     </div>
@@ -5077,6 +5088,8 @@ function heuteAb(){
 // des Vortags bis 22:00Z des letzten Tages.
 const MESSE_START = '2026-08-20T22:00:00Z';
 const MESSE_ENDE  = '2026-08-23T22:00:00Z';
+// "Aktuell" beginnt, wo die Messe endet — alles danach ist die laufende Liste.
+const AKTUELL_START = MESSE_ENDE;
 // Der Filter auf `versteckt` läuft ins Leere, solange die Spalte nicht
 // existiert — PostgREST antwortet dann mit 400 und die Tafel bliebe leer.
 // Deshalb wird beim ersten Fehlschlag einmal umgeschaltet und der Filter für
@@ -5084,6 +5097,7 @@ const MESSE_ENDE  = '2026-08-23T22:00:00Z';
 var VERSTECKT_SPALTE = true;
 function versteckFilter(){ return VERSTECKT_SPALTE ? '&versteckt=is.false' : ''; }
 function holeScores(url, weiter, fehlschlag){
+  if(OFFLINE){ (fehlschlag || function(){})(); return; }   // lokal ist die Liste
   fetch(url + versteckFilter(), { headers: { apikey: SB_KEY } })
     .then(function(r){
       if(r.ok) return r.json();
@@ -5094,17 +5108,32 @@ function holeScores(url, weiter, fehlschlag){
       }
       return Promise.reject(r.status);
     })
-    .then(weiter)
+    .then(function(liste){
+      // Anzeige-Deckel, passend zum Sende-Deckel: was nicht erfahrbar ist,
+      // wird auch nicht angezeigt — egal wie es in die Tabelle kam.
+      weiter((liste || []).filter(function(e){ return e && e.dist >= 0 && e.dist <= 15000; }));
+    })
     .catch(fehlschlag || function(){});
 }
 function zeitFilter(modus){
   if(modus === 'messe') return '&created_at=gte.' + encodeURIComponent(MESSE_START) +
                                '&created_at=lt.'  + encodeURIComponent(MESSE_ENDE);
   if(modus === 'alle')  return '';                       // wirklich alles
-  return '&created_at=gte.' + encodeURIComponent(heuteAb());
+  return '&created_at=gte.' + encodeURIComponent(AKTUELL_START);
 }
 // 'heute', 'messe' oder 'alle' — der Startbildschirm merkt sich die Wahl.
 var MENU_MODUS = 'heute';
+// Die Laeufe der Cannafair sind eingefroren und fahren als cannafair.json mit —
+// unabhaengig davon, was in Supabase steht oder geloescht wurde.
+var CANNAFAIR = [];
+fetch('cannafair.json', {cache:'no-store'})
+  .then(function(r){ return r.ok ? r.json() : []; })
+  .then(function(l){ CANNAFAIR = l || []; })
+  .catch(function(){});
+function mitCannafair(liste, modus){
+  if(modus !== 'messe' && modus !== 'alle') return liste || [];
+  return (liste || []).concat(CANNAFAIR);
+}
 function sbFetchTop(cb){
   const lokal = lokalAlsListe(MENU_MODUS);
   try{
@@ -5112,15 +5141,15 @@ function sbFetchTop(cb){
       + zeitFilter(MENU_MODUS) + '&order=dist.desc&limit=200',
       function(list){
         // auch im Menü: ein Name, ein Platz — Netz und lokal zusammen
-        globalTop = listenVereinen(list, lokal);
+        globalTop = listenVereinen(mitCannafair(list, MENU_MODUS), lokal);
         if(cb) cb(globalTop);
       },
       function(){
         // Kein Netz: die lokale Liste ist die Liste. Leer ist sie nur am ersten Tag.
-        globalTop = listenVereinen([], lokal);
+        globalTop = listenVereinen(mitCannafair([], MENU_MODUS), lokal);
         if(cb) cb(globalTop);
       });
-  }catch(e){ globalTop = listenVereinen([], lokal); if(cb) cb(globalTop); }
+  }catch(e){ globalTop = listenVereinen(mitCannafair([], MENU_MODUS), lokal); if(cb) cb(globalTop); }
 }
 // ---------- Bestenliste: Screen mit Heute/Alle Zeiten und Nachladen ----------
 const BOARD = {modus: 'heute', seite: 0, proSeite: 10, eintraege: [], amEnde: false, laeuft: false};
@@ -5160,7 +5189,7 @@ function boardLaden(anhaengen){
   holeScores(url,
     function(liste){
       BOARD.laeuft = false;
-      BOARD.roh = liste || [];
+      BOARD.roh = mitCannafair(liste, BOARD.modus);
       const eindeutig = bestenProName(BOARD.roh);
       BOARD.eintraege = eindeutig.slice(0, brauche);
       BOARD.amEnde = BOARD.eintraege.length >= eindeutig.length;
@@ -5168,6 +5197,13 @@ function boardLaden(anhaengen){
     },
     function(){
       BOARD.laeuft = false;
+      // Kein Netz: die lokale Liste ist das Board
+      BOARD.roh = mitCannafair(lokalAlsListe(BOARD.modus), BOARD.modus);
+      const eindeutig = bestenProName(BOARD.roh);
+      BOARD.eintraege = eindeutig.slice(0, brauche);
+      BOARD.amEnde = true;
+      boardZeichnen();
+      return;
       if(!BOARD.eintraege.length){
         el('boardListe').innerHTML = '<div class="bhint">Keine Verbindung zur Bestenliste.</div>';
       }
@@ -5180,7 +5216,7 @@ function boardZeichnen(){
   const box = el('boardListe');
   if(!BOARD.eintraege.length){
     box.innerHTML = '<div class="bhint">Noch keine Läufe' +
-      (BOARD.modus === 'heute' ? ' heute' : '') + ' — der erste Platz ist frei.</div>';
+      (BOARD.modus === 'heute' ? ' aktuell' : '') + ' — der erste Platz ist frei.</div>';
   } else {
     const meiner = (S.playerName || '').toUpperCase();
     let html = '';
@@ -5231,7 +5267,7 @@ function boardModus(m){
 // WLAN aus, und ein verlorener Lead ist nicht wiederherstellbar.
 var kontaktLaeuft = false;
 function kontakteSenden(){
-  if(kontaktLaeuft) return;
+  if(OFFLINE || kontaktLaeuft) return;
   let liste;
   try{ liste = JSON.parse(localStorage.getItem('gk_kontakte') || '[]'); }catch(e){ return; }
   if(!liste.length) return;
@@ -5258,12 +5294,49 @@ function kontakteSenden(){
 // nächsten Start nachgeschickt. So überlebt die Liste am Stand jeden WLAN-Ausfall
 // und Besucher sehen ihren Lauf sofort — nicht erst, wenn die Antwort zurück ist.
 const LOKAL_KEY = 'gk_laeufe';
+// Die Bestenliste lebt in scores.json neben index.html und wandert mit dem
+// Ordner — kein Supabase, kein Internet. START.command bringt einen kleinen
+// Server mit, der die Datei liest und schreibt. Öffnet jemand index.html ohne
+// ihn, faellt alles auf localStorage zurueck, und nichts geht verloren.
+const OFFLINE = (function(){
+  // Ein Code, zwei Betriebsarten: auf dem Messe-Laptop (localhost) lebt die
+  // Liste in scores.json und braucht kein Internet; auf getkong.world ist
+  // Supabase die gemeinsame Liste. ?online=1 / ?offline=1 erzwingen zum Testen.
+  if(/[?&]online=1/.test(location.search)) return false;
+  if(/[?&]offline=1/.test(location.search)) return true;
+  return location.protocol === 'file:' ||
+         location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+})();
+var scoresDatei = null;                 // Inhalt von scores.json, einmal geladen
+var scoresDateiGeht = false;            // Server kann schreiben?
 function lokalLaden(){
+  if(scoresDatei) return scoresDatei;
   try{ return JSON.parse(localStorage.getItem(LOKAL_KEY) || '[]'); }catch(e){ return []; }
 }
 function lokalSpeichern(liste){
-  try{ localStorage.setItem(LOKAL_KEY, JSON.stringify(liste.slice(-2000))); }catch(e){}
+  const l = liste.slice(-2000);
+  scoresDatei = l;
+  try{ localStorage.setItem(LOKAL_KEY, JSON.stringify(l)); }catch(e){}
+  if(scoresDateiGeht){
+    fetch('scores.json', { method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(l) }).catch(function(){});
+  }
 }
+// Beim Start: Datei holen und mit localStorage zusammenfuehren (aelterer Stand
+// auf diesem Laptop darf nicht verschwinden, nur weil die Datei juenger ist)
+(function(){
+  fetch('scores.json', {cache:'no-store'}).then(function(r){
+    if(!r.ok) throw 0; scoresDateiGeht = true; return r.json();
+  }).then(function(datei){
+    let ls = []; try{ ls = JSON.parse(localStorage.getItem(LOKAL_KEY) || '[]'); }catch(e){}
+    const ids = {}; const alle = [];
+    (datei||[]).concat(ls).forEach(function(e){ if(e && e.id && !ids[e.id] && e.dist >= 0 && e.dist <= 15000){ ids[e.id]=1; alle.push(e); } });
+    alle.sort(function(a,b){ return (a.ts||0)-(b.ts||0); });
+    scoresDatei = alle;
+    if(alle.length !== (datei||[]).length) lokalSpeichern(alle);
+    try{ if(typeof menuModus === 'function') menuModus(MENU_MODUS || 'heute'); }catch(e){}
+  }).catch(function(){ scoresDateiGeht = false; });
+})();
 function lokalEintragen(eintrag){
   const liste = lokalLaden();
   liste.push(eintrag);
@@ -5271,6 +5344,7 @@ function lokalEintragen(eintrag){
 }
 // Einträge, die noch nicht bei Supabase angekommen sind, erneut senden
 function outboxLeeren(){
+  if(OFFLINE) return;
   const liste = lokalLaden();
   const offen = liste.filter(function(e){ return !e.gesendet; });
   if(!offen.length) return;
@@ -5291,10 +5365,10 @@ function outboxLeeren(){
 function lokalAlsListe(modus){
   const ab = (modus === 'alle') ? 0
            : (modus === 'messe') ? Date.parse(MESSE_START)
-           : Date.parse(heuteAb());
+           : Date.parse(AKTUELL_START);
   const bis = (modus === 'messe') ? Date.parse(MESSE_ENDE) : Infinity;
   return lokalLaden()
-    .filter(function(e){ return e.ts >= ab && e.ts < bis; })
+    .filter(function(e){ return e.ts >= ab && e.ts < bis && e.dist >= 0 && e.dist <= 15000; })
     .map(function(e){ return { name: e.name, dist: e.dist, deliveries: e.deliveries, level: e.level }; });
 }
 // Supabase-Liste und lokale Liste zusammenführen — ein Name, ein Platz
@@ -5331,6 +5405,7 @@ function sbSubmit(punkte, cb){
   // Zuerst lokal: der Lauf ist damit sicher, egal was das Netz macht.
   lokalEintragen(eintrag);
   if(cb) cb(true);               // die Oberfläche wartet nicht aufs Netz
+  if(OFFLINE) return;
   try{
     fetch(SB_URL + '/rest/v1/getkong_scores', {
       method: 'POST',
@@ -5861,10 +5936,33 @@ function startGame(){
   // Jeder Lauf bekommt einen frischen Namen. Am Stand spielt derselbe Browser
   // den ganzen Tag für immer neue Leute — ein gemerkter Name wäre der der
   // Person davor. Wer seinen Namen behalten will, ändert ihn nach dem Lauf.
-  const name = zufallsName();
+  // Username und E-Mail sind wieder Pflicht — die Liste laeuft online weiter,
+  // und ein Preis braucht eine erreichbare Person dahinter.
+  const nameFeld = el('nameInput'), mailFeld = el('mailInput'), dsBox = el('dsgvoOk');
+  const name = ((nameFeld && nameFeld.value) || '').trim();
+  const mail = ((mailFeld && mailFeld.value) || '').trim();
+  if(!name){
+    if(nameFeld){ nameFeld.classList.remove('err'); void nameFeld.offsetWidth;
+      nameFeld.classList.add('err'); nameFeld.focus(); }
+    return;
+  }
+  if(!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(mail)){
+    if(mailFeld){ mailFeld.classList.remove('err'); void mailFeld.offsetWidth;
+      mailFeld.classList.add('err'); mailFeld.focus(); }
+    return;
+  }
   S.playerName = name.substring(0, 20);
-  // E-Mail-Anmeldung und Kontakt-Warteschlange sind entfallen: es wird nichts
-  // mehr abgefragt, was den Start aufhält.
+  try{
+    localStorage.setItem('getkong-mail', mail);
+    const liste = JSON.parse(localStorage.getItem('gk_kontakte') || '[]');
+    const key = (name + '|' + mail).toLowerCase();
+    if(!liste.some(function(k){ return (k.user + '|' + k.mail).toLowerCase() === key; })){
+      liste.push({user: S.playerName, real: '', mail: mail,
+                  zustimmung: !!(dsBox && dsBox.checked), ts: new Date().toISOString()});
+      localStorage.setItem('gk_kontakte', JSON.stringify(liste.slice(-500)));
+    }
+    kontakteSenden();
+  }catch(e){}
   try{
     localStorage.setItem('getkong-name', S.playerName);
     const n = parseInt(localStorage.getItem('getkong-runs') || '0', 10) + 1;
@@ -5963,7 +6061,16 @@ function sbRang(score, cb){
         namen.delete((S.playerName || '—').trim().toUpperCase());   // sich selbst nicht überholen
         cb(namen.size + 1);
       },
-      function(){ cb(null); });
+      function(){
+        // Kein Netz: Platz aus der lokalen Liste — ein Name, ein Platz
+        try{
+          const heute = lokalAlsListe('heute');
+          const namen = new Set();
+          for(const z of heute) if(z.dist > Math.floor(score)) namen.add((z.name || '—').trim().toUpperCase());
+          namen.delete((S.playerName || '—').trim().toUpperCase());
+          cb(namen.size + 1);
+        }catch(e){ cb(null); }
+      });
   }catch(e){ cb(null); }
 }
 
@@ -6650,6 +6757,18 @@ function stufeWeiter(){
   if(menuStufe === 1){ stufeSetzen(2); return; }
   startGame();
 }
+(function(){
+  const n = el('nameInput'), m = el('mailInput');
+  try{
+    if(n) n.value = localStorage.getItem('getkong-name') || '';
+    if(m) m.value = localStorage.getItem('getkong-mail') || '';
+  }catch(e){}
+  if(n && !n.value) n.placeholder = zufallsName();   // Vorschlag, kein Zwang
+  for(const f of [n, m]) if(f) f.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); stufeWeiter(); }
+    e.stopPropagation();
+  });
+})();
 stufeSetzen(1);
 el('ansageBtn').addEventListener('click', stufeWeiter);
 el('startBtn').addEventListener('click', stufeWeiter);
