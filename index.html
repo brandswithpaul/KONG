@@ -1427,8 +1427,8 @@ const scene = new THREE.Scene();
 // CI-Himmel (01.11.2026, Paul): wie das Startbildschirm-Video — oben Salbei,
 // zum Horizont Creme. Gegen den Grünstich von damals: Nebel und Umgebungslicht
 // sind cremig-warm, Salbei bleibt dem oberen Himmel vorbehalten.
-scene.background = new THREE.Color(0xe6dec8);
-scene.fog = new THREE.Fog(0xe6e0ca, REALISMUS ? (MOBIL ? 50 : 70) : 210, REALISMUS ? (MOBIL ? 235 : 330) : 380);  // Ende knapp hinter der Abschnitts-Grenze (300 m), sonst sieht man sie wegspringen  // Sommerdunst am Horizont. Der Dunst setzt
+scene.background = new THREE.Color(0xece8d3);
+scene.fog = new THREE.Fog(0xece8d3, REALISMUS ? (MOBIL ? 50 : 70) : 210, REALISMUS ? (MOBIL ? 235 : 330) : 380);  // Ende knapp hinter der Abschnitts-Grenze (300 m), sonst sieht man sie wegspringen  // Sommerdunst am Horizont. Der Dunst setzt
 // erst bei 210 m ein: vorher lag er ab 80 m über der halben Straße und hat die Häuser
 // aufgehellt, statt nur das Ende der Flucht weichzuzeichnen.
 
@@ -1466,7 +1466,7 @@ document.body.appendChild(renderer.domElement);
 // fast schwarz. Mehr Himmelslicht hebt sie an, ohne die Sonnenseite zu ändern.
 // Im Realismus kommt das Umgebungslicht zum größten Teil aus der Himmels-
 // Reflexion (scene.environment), die Halbkugel füllt nur noch nach.
-scene.add(new THREE.HemisphereLight(0xe2efe4, 0xc4ad88, REALISMUS ? 0.8 : 0.8));   // heller, warmer Bodenreflex   // cremiges Himmelslicht
+scene.add(new THREE.HemisphereLight(0xdcebdc, 0xc9b48f, REALISMUS ? 0.8 : 0.8));   // heller, warmer Bodenreflex   // cremiges Himmelslicht
 const sun = new THREE.DirectionalLight(0xffe6c4, REALISMUS ? 3.25 : 0.95);   // goldener und kräftiger // warm, aber neutral genug für Farbunterschiede
 sun.position.set(-60, 35, -10);
 sun.castShadow = true;
@@ -1516,12 +1516,19 @@ skyCanvas.width = 2; skyCanvas.height = 256;
   // Minze wie im CI-Bild oben, Creme zum Horizont (Paul: der Himmel soll sich im
   // ganzen Bild wiederfinden). Die Textur ist jetzt linear: der Composer gibt
   // ohne sRGB-Umrechnung aus, als sRGB dekodiert kam das Blau-Grün als dunkles Oliv an.
-  gr.addColorStop(0.0,  '#7cad9d');   // Zenit, Minze
-  gr.addColorStop(0.22, '#91bcab');
-  gr.addColorStop(0.45, '#b1cdbd');
-  gr.addColorStop(0.65, '#cfdac6');
-  gr.addColorStop(0.84, '#e7e0c8');
-  gr.addColorStop(1.0,  '#ebe3cd');   // Horizont, wie der Nebel
+  // 16.11.2026: exakt der Hero-Verlauf von getkong.de (dingdonggetkong, index.tsx):
+  // #508465 → #76ab8a → #a9ceb2 → #d4dfc2 → #ece8d3 → #FFFBEF. Gelegt auf den Teil
+  // der Kuppel, der im Bild steht — vom Bildrand oben (~0,52) bis zum Horizont
+  // (~0,82). Vorher lag der ganze Verlauf über die Kuppel verteilt, im Bild kam
+  // nur sein blasses unteres Ende an.
+  gr.addColorStop(0.0,  '#43765a');   // Zenit, etwas tiefer als der Hero-Anfang
+  gr.addColorStop(0.44, '#508465');
+  gr.addColorStop(0.56, '#76ab8a');
+  gr.addColorStop(0.66, '#a9ceb2');
+  gr.addColorStop(0.74, '#d4dfc2');
+  gr.addColorStop(0.80, '#ece8d3');
+  gr.addColorStop(0.86, '#fffbef');
+  gr.addColorStop(1.0,  '#fffbef');
   ctx.fillStyle = gr; ctx.fillRect(0, 0, 2, 256);
 })();
 const skyTex = new THREE.CanvasTexture(skyCanvas);
@@ -1540,7 +1547,7 @@ if(REALISMUS){
     const env = new THREE.Scene();
     const c = document.createElement('canvas'); c.width = 4; c.height = 256;
     const g = c.getContext('2d'), v = g.createLinearGradient(0, 0, 0, 256);
-    v.addColorStop(0.0, '#86b6a5'); v.addColorStop(0.42, '#d3dccb'); v.addColorStop(0.5, '#eee6d2');
+    v.addColorStop(0.0, '#76ab8a'); v.addColorStop(0.42, '#d4dfc2'); v.addColorStop(0.5, '#eee6d2');
     v.addColorStop(0.52, '#9a958a'); v.addColorStop(1.0, '#6f6a60');
     g.fillStyle = v; g.fillRect(0, 0, 4, 256);
     const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding;
@@ -1702,8 +1709,10 @@ try{
       // (Tiefe 1) bleibt, wie er ist.
       '  float tf = texture2D(tTiefe, vUv).x;',
       '  float zl = uNah * uFern / (uFern - tf * (uFern - uNah));',
-      '  float dunst = smoothstep(30.0, 300.0, zl) * step(tf, 0.99995) * 0.46;',
-      '  vec3 himmel = mix(vec3(0.91, 0.875, 0.79), vec3(0.64, 0.79, 0.73), smoothstep(0.42, 0.98, vUv.y));',
+      // Himmelskuppel (340 m) und die Wolken davor bleiben ohne Dunst — sonst grauen sie ein
+      '  float dunst = smoothstep(45.0, 320.0, zl) * step(zl, 330.0) * 0.34;',
+      // Farben des Hero-Verlaufs von getkong.de: unten #ece8d3, oben #a9ceb2
+      '  vec3 himmel = mix(vec3(0.925, 0.91, 0.827), vec3(0.663, 0.808, 0.698), smoothstep(0.45, 0.98, vUv.y));',
       '  c.rgb = mix(c.rgb, himmel, dunst);',
       // Weichzeichner-Schimmer (wie ein Pro-Mist-Filter): helle Flächen strahlen
       // weich in die Umgebung — verträumt, ohne dass es unscharf wirkt.
@@ -1713,22 +1722,26 @@ try{
       '    neb += texture2D(tDiffuse, vUv + o3).rgb; }',
       '  neb /= 8.0;',
       '  float nl = dot(neb, vec3(0.299, 0.587, 0.114));',
-      '  c.rgb += max(nl - 0.55, 0.0) * 0.55 * (1.0 - c.rgb) * vec3(1.0, 0.97, 0.9);',
+      '  c.rgb += max(nl - 0.6, 0.0) * 0.32 * (1.0 - c.rgb) * vec3(1.0, 0.98, 0.93);',   // weniger Schleier: klarer
       '#endif',
       '  vec3 o = c.rgb;',
+      // Grading neu (16.11.2026) nach der Startseite getkong.de: Salbei und Creme,
+      // klar statt matschig. Weiche Filmkurve statt linearem Kontrast, Schatten
+      // salbeigrün, Lichter cremig, Schwarz nur leicht angehoben (vorher warmer
+      // Ockerschleier — der machte das Bild olivgrau).
       '  float l = dot(c.rgb, vec3(0.299, 0.587, 0.114));',
-      // Vibe: Vibrance (wenig gesättigte Farben stärker anheben als bunte), mehr Kontrast,
-      // Split-Toning — warme Lichter, leicht kühle Schatten wie ein Sommerabend-Film.
       '  float sat = max(c.r, max(c.g, c.b)) - min(c.r, min(c.g, c.b));',
-      '  c.rgb = mix(vec3(l), c.rgb, ' + (REALISMUS ? '1.12' : '1.12') + ' + 0.22 * (1.0 - smoothstep(0.0, 0.5, sat)));',
-      '  c.rgb = (c.rgb - 0.5) * 1.03 + 0.5;',                       // weicher: verträumt statt knackig
-      '  c.rgb = c.rgb * 0.94 + vec3(0.055, 0.05, 0.035);',          // angehobene, warme Schwarzwerte (nostalgisch)
-      // Schatten minzig wie der Himmel, Lichter cremig-warm
-      '  c.rgb *= mix(vec3(0.94, 1.01, 0.995), vec3(1.04, 1.0, 0.935), smoothstep(0.15, 0.85, l));',
-      '  c.rgb += (1.0 - smoothstep(0.0, 0.6, l)) * vec3(-0.006, 0.016, 0.012);',
+      '  c.rgb = mix(vec3(l), c.rgb, 1.06 + 0.05 * (1.0 - smoothstep(0.0, 0.45, sat)));',   // Sättigung + wenig Vibrance (mehr färbt Creme gelb)
+      '  vec3 sk = clamp(c.rgb, 0.0, 1.0);',
+      '  c.rgb = mix(c.rgb, sk * sk * (3.0 - 2.0 * sk), 0.28);',                            // Filmkurve, Mitten kräftiger
+      '  l = dot(c.rgb, vec3(0.299, 0.587, 0.114));',
+      '  float tief = 1.0 - smoothstep(0.0, 0.55, l), hoch = smoothstep(0.45, 1.0, l);',
+      '  c.rgb = mix(c.rgb, c.rgb * vec3(0.93, 1.03, 0.98), tief * 0.55);',                  // Schatten: Salbei
+      '  c.rgb = mix(c.rgb, c.rgb * vec3(1.02, 1.0, 0.96), hoch * 0.4);',                    // Lichter: Creme
+      '  c.rgb = c.rgb * 0.965 + vec3(0.022, 0.032, 0.026);',                                // Schwarz leicht salbeigrün angehoben
       '  vec2 p = vUv - 0.5;',
       '  float v = smoothstep(1.1, 0.35, length(p * vec2(1.0, 1.15)));',
-      '  c.rgb *= mix(vec3(0.84, 0.82, 0.8), vec3(1.0), v);',          // weichere, wärmere Vignette
+      '  c.rgb *= mix(vec3(0.9, 0.9, 0.88), vec3(1.0), v);',            // leichte Vignette
       '  float n = fract(sin(dot(vUv + uSeed, vec2(12.9898, 78.233))) * 43758.5453);',
       // Papier wie im CI-Bild: niederfrequente Fleckung, fest am Bild (bewegt sich nicht mit)
       '  vec2 q = vUv * vec2(7.0, 4.0);',
@@ -1736,9 +1749,9 @@ try{
       '  vec2 fq = fract(q); fq = fq * fq * (3.0 - 2.0 * fq);',
       '  float pap2 = mix(mix(fract(sin(dot(floor(q), vec2(41.3,289.1)))*15731.7), fract(sin(dot(floor(q)+vec2(1,0), vec2(41.3,289.1)))*15731.7), fq.x),',
       '                   mix(fract(sin(dot(floor(q)+vec2(0,1), vec2(41.3,289.1)))*15731.7), fract(sin(dot(floor(q)+vec2(1,1), vec2(41.3,289.1)))*15731.7), fq.x), fq.y);',
-      '  c.rgb *= 0.985 + pap2 * 0.03 + pap * 0.0;',
+      '  c.rgb *= 0.99 + pap2 * 0.02;',
       '  c.rgb = clamp(c.rgb, 0.0, 1.0);',
-      '  c.rgb += (n - 0.5) * 0.032;',                      // Filmkorn, kräftiger
+      '  c.rgb += (n - 0.5) * 0.022;',                      // feines Filmkorn
       '  c.rgb = mix(o, c.rgb, uAmount);',
       '  gl_FragColor = vec4(c.rgb, c.a);',
       '}'
@@ -1959,23 +1972,27 @@ function haeuserNachtragen(){
 var wolken = [];
 (function(){
   const L = new THREE.TextureLoader();
-  // Wolken aus dem CI-Poster freigestellt (blender/ci_wolken.py): weich, fotografisch,
-  // cremeweiß — wie im Startbild. Vorher Comic-Puffs.
-  const NAMEN = ['ci-wolke1','ci-wolke2','ci-wolke3','ci-wolke4'];
-  const BREITEN = [120, 62, 34, 78];
+  // Die drei gemalten Wolken der Startseite getkong.de (cloud-left/-right/-mid),
+  // in derselben Deckkraft wie dort (0,9 / 0,9 / 0,8). Vorher die aus dem Poster
+  // freigestellten ci-wolke1–4.
+  const NAMEN = ['hp-wolke-links','hp-wolke-rechts','hp-wolke-mitte'];
+  const BREITEN = [74, 66, 56];
+  const DECKKRAFT = [0.9, 0.9, 0.8];
   NAMEN.forEach(function(n, i){
     L.load('assets/sprites/' + n + '.webp', function(t){
       t.encoding = THREE.sRGBEncoding;
       const br = BREITEN[i] * (0.85 + Math.random() * 0.3);
       const geo = new THREE.PlaneGeometry(br, br * (t.image.height / t.image.width));
       // Cremeweiß wie die Wolken im CI-Bild; toneMapped aus, sonst graut ACES sie ein
-      const mat = new THREE.MeshBasicMaterial({map: t, transparent: true, color: 0xfffdf6,
-        opacity: 0.96, depthWrite: false, fog: false, toneMapped: false});
-      for(let k = 0; k < 3; k++){
+      // leicht über 1: die gemalten Wolken sind cremeweiß, das Grading nimmt Lichter etwas zurück
+      const mat = new THREE.MeshBasicMaterial({map: t, transparent: true, color: new THREE.Color(1.06, 1.05, 1.04),
+        opacity: DECKKRAFT[i], depthWrite: false, fog: false, toneMapped: false});
+      for(let k = 0; k < 4; k++){
         const m = new THREE.Mesh(geo, mat);
         m.renderOrder = -5;
-        m.position.set((Math.random() * 130) - 65, 48 + Math.random() * 34,
-                       -60 - (i * 3 + k) * 26);
+        if(k % 2) m.scale.x = -1;                      // gespiegelt: drei Motive, sechs Formen
+        m.position.set((Math.random() * 130) - 65, 54 + Math.random() * 40,
+                       -60 - (i * 4 + k) * 26);
         m.userData.tempo = 0.22 + Math.random() * 0.14;   // Bruchteil der Spielergeschwindigkeit
         scene.add(m); wolken.push(m);
       }
@@ -1988,7 +2005,7 @@ function wolkenNeuSetzen(){
   for(const w of wolken){
     w.position.z = S.z - Math.random() * 330;
     w.position.x = S.x + (Math.random() * 130) - 65;
-    w.position.y = 48 + Math.random() * 34;
+    w.position.y = 54 + Math.random() * 40;
   }
 }
 function wolkenUpdate(){
@@ -2003,7 +2020,7 @@ function wolkenUpdate(){
     if(w.position.z > S.z + 40){
       w.position.z -= 330;
       w.position.x = S.x + (Math.random() * 130) - 65;
-      w.position.y = 48 + Math.random() * 34;
+      w.position.y = 54 + Math.random() * 40;
     }
     // Gegenrichtung: nach einem Neustart oder Respawn springt S.z, die Wolken
     // bleiben dann weit vorn liegen und der Himmel ist leer, bis man sie
@@ -2011,7 +2028,7 @@ function wolkenUpdate(){
     else if(w.position.z < S.z - 380){
       w.position.z = S.z - 40 - Math.random() * 300;
       w.position.x = S.x + (Math.random() * 130) - 65;
-      w.position.y = 48 + Math.random() * 34;
+      w.position.y = 54 + Math.random() * 40;
     }
   }
 }
@@ -5553,7 +5570,7 @@ function spawnCurb(){
   farbe.repeat.set(1, Math.max(1, Math.round(L / 12)));
   const zoneMat = new THREE.MeshStandardMaterial({
     map: farbe, transparent: true, opacity: 0.92, roughness: 0.7,
-    emissive: 0xc2e67e, emissiveMap: farbe, emissiveIntensity: 0.25,
+    emissive: 0xc2e67e, emissiveMap: farbe, emissiveIntensity: 0.7,     // Schrift und Linien leuchten klar (16.11.)
     depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2});
   const zone = new THREE.Mesh(new THREE.PlaneGeometry(CFG.curbXmax-CFG.curbXmin-0.1, L), zoneMat);
   zone.rotation.x = -Math.PI/2;
@@ -5566,8 +5583,8 @@ function spawnCurb(){
   const schleier = new THREE.Mesh(
     new THREE.PlaneGeometry(CFG.curbXmax-CFG.curbXmin-0.1, L),
     new THREE.MeshBasicMaterial({
-      color: new THREE.Color(0x63d92a).multiplyScalar(0.55),     // nur noch ein Hauch über dem Pflaster
-      transparent: true, opacity: 0.16, depthWrite: false,
+      color: new THREE.Color(0xc2e67e).multiplyScalar(0.6),      // sauberes Lime statt Grasgrün
+      transparent: true, opacity: 0.2, depthWrite: false,
       blending: THREE.AdditiveBlending, toneMapped: false}));
   schleier.rotation.x = -Math.PI/2;
   schleier.position.set((CFG.curbXmin+CFG.curbXmax)/2, CFG.curbY+0.025, (zStart+zEnd)/2);
@@ -5578,12 +5595,23 @@ function spawnCurb(){
     new THREE.PlaneGeometry(CFG.curbXmax-CFG.curbXmin+3.2, L+7),
     new THREE.MeshBasicMaterial({
       map: zonenHaloTex(),
-      color: new THREE.Color(0x7ce02e).multiplyScalar(0.7),      // Saum nur noch angedeutet
-      transparent: true, opacity: 0.22, depthWrite: false,
+      color: new THREE.Color(0xb4ec5c).multiplyScalar(0.75),
+      transparent: true, opacity: 0.3, depthWrite: false,
       blending: THREE.AdditiveBlending, toneMapped: false}));
   halo.rotation.x = -Math.PI/2;
   halo.position.set((CFG.curbXmin+CFG.curbXmax)/2, CFG.curbY+0.008, (zStart+zEnd)/2);
   g.add(halo); kanten.push(halo);
+  // Klare Lichtkanten (16.11.2026, Paul: „vom Lichteffekt klarer"): zwei scharfe,
+  // helle Lime-Linien an beiden Längsseiten. Der weiche Schleier allein ließ die
+  // Zone im Dunst verschwimmen; die Linien zeichnen sie auch aus der Ferne.
+  const lichtMat = new THREE.MeshBasicMaterial({color: new THREE.Color(0xc8f080).multiplyScalar(1.25),
+    transparent: true, opacity: 0.95, depthWrite: false, toneMapped: false});
+  for(const lx of [CFG.curbXmin + 0.14, CFG.curbXmax - 0.14]){
+    const linie = new THREE.Mesh(new THREE.PlaneGeometry(0.09, L - 0.4), lichtMat);
+    linie.rotation.x = -Math.PI/2;
+    linie.position.set(lx, CFG.curbY + 0.03, (zStart+zEnd)/2);
+    g.add(linie);
+  }
   const ztex = chevTexBase.clone(); ztex.needsUpdate = true;
   ztex.wrapS = ztex.wrapT = THREE.RepeatWrapping;
   // Kachel so lang wie die Zone breit ist (2,4 m) — sonst wird der Brokkoli oval.
@@ -5647,7 +5675,7 @@ function spawnCurb(){
   })();
   const saeule = new THREE.Mesh(saeuleGeo, new THREE.MeshBasicMaterial({
     map: strahlTex, color: new THREE.Color(0xc2e67e).multiplyScalar(1.15),
-    transparent: true, opacity: 0.26, depthWrite: false,
+    transparent: true, opacity: 0.4, depthWrite: false,
     blending: THREE.AdditiveBlending, toneMapped: false, fog: false,
     side: THREE.DoubleSide}));
   saeule.position.set(12.2, 11, houseZ);
@@ -5825,6 +5853,7 @@ function spawnCurb(){
   scene.add(g);
   const curb = {zStart, zEnd, group:g, used:false, doorPos: new THREE.Vector3(12.4, 2.2, houseZ),
     door, zone, ztex, marker, sweet, houseZ, kanten, tore, saeule, anflug, takte, gruen, empf, flash: 0};
+  curb.lichtMat = lichtMat;
   S.curbs.push(curb);
   // Abschnitte, die diese Zone überdecken, neu dekorieren — sonst steht die
   // Häuserzeile dort noch vorn. Nur weit voraus, damit nichts sichtbar umspringt.
@@ -7379,9 +7408,9 @@ function abschnittBeleben(ch, bankListe, cafeListe){
 let AC = null;
 // Hauptschalter Ton. Aus: der Kontext entsteht, bleibt aber angehalten — alle
 // Klänge laufen ins Leere, ohne dass jede sfx-Funktion einzeln gefragt wird.
-const TON_AN = true;    // Effekte an, Musik aus (Paul, 02.11.2026: „push with sound")
+const TON_AN = true;    // Ton an (Effekte + Musik)
 // Musik getrennt schaltbar: Effekte an, Musik aus (Paul, 01.11.2026).
-const MUSIK_AN = false;
+const MUSIK_AN = true;   // Musik wieder an (Paul, 16.11.2026)
 function audio(){
   if(!AC){
     AC = new (window.AudioContext||window.webkitAudioContext)();
@@ -10246,11 +10275,13 @@ function update(dt){
         c.empf.ar.rotation.z = -0.35 + Math.sin(jetzt * 0.012) * 0.25 * nah;
       }
       // Kanten atmen, in der Zone deutlich heller — das ist das Signal "du bist drin"
-      const kantenWert = (drin ? 0.16 : 0.08) + 0.03 * Math.sin(jetzt * 0.004);   // zurückgenommen: das Pflaster soll sichtbar bleiben
+      // 16.11.2026: deutlicher (Paul: „Lichteffekt klarer"), das Pflaster bleibt trotzdem lesbar
+      const kantenWert = (drin ? 0.34 : 0.22) + 0.04 * Math.sin(jetzt * 0.004);
+      if(c.lichtMat) c.lichtMat.opacity = drin ? 1 : 0.85 + 0.1 * Math.sin(jetzt * 0.004);
       if(c.kanten) for(const k of c.kanten) k.material.opacity = kantenWert;
       // Lichtsäule pulst langsam und dreht zur Kamera
       if(c.saeule){
-        c.saeule.material.opacity = 0.20 + 0.07 * Math.sin(jetzt*0.0022);
+        c.saeule.material.opacity = 0.36 + 0.08 * Math.sin(jetzt*0.0022);
         c.saeule.rotation.y = Math.atan2(S.x - c.saeule.position.x, S.z - c.saeule.position.z);
       }
       // Anflug-Pfeile blinken nacheinander in Fahrtrichtung
@@ -10279,7 +10310,8 @@ function update(dt){
       // (Säule, Takt, Anflug) verlöschen. Vorher blieb ein graugrüner Rest.
       if(c.zone) c.zone.material.opacity = 0.86 + f * 0.12;
       if(c.kanten) for(const k of c.kanten) k.material.opacity = 0.10 + f * 0.35;
-      if(c.saeule) c.saeule.material.opacity = f * 0.22;
+      if(c.saeule) c.saeule.material.opacity = f * 0.4;
+      if(c.lichtMat) c.lichtMat.opacity = 0.25 + f * 0.75;    // nach der Lieferung erlöschen die Lichtkanten
       if(c.takte) for(const bal of c.takte) bal.material.opacity = f;
       if(c.anflug) for(const a of c.anflug) a.material.opacity = f * 0.3;
       if(c.sweet) c.sweet.material.opacity = f * 0.3;
