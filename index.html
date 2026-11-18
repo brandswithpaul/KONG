@@ -3917,14 +3917,23 @@ function bestenPlatzZeigen(){
   try{ p2 = parseInt(localStorage.getItem('gk_bestplatz') || '99', 10); }catch(e){}
   b.textContent = (p2 < 99) ? ('Bester Platz: ' + p2) : '';
 }
+// Angesagt wird nur an diesen Plätzen (Paul, 18.11.2026) — bei jedem einzelnen
+// Platz kam sonst im Sekundentakt Toast, Blitz, Wackler und Fanfare.
+const PLATZ_ANSAGEN = [60, 50, 40, 30, 20, 15, 10, 9, 8, 7, 6, 5, 4, 3, 2];
 function updateRecordTracker(){
   if(!hsTargets.length) return;
+  let ansage = 0, rekord = false;
   while(hsIdx < hsTargets.length && S.score >= hsTargets[hsIdx]){
     const rank = hsTargets.length - hsIdx;
     hsIdx++;
-    if(hsIdx >= hsTargets.length) showToast('Neuer Rekord.', 'Ab hier ist alles deins.');
-    else showToast('Platz ' + rank, '');
+    if(hsIdx >= hsTargets.length) rekord = true;
+    else if(PLATZ_ANSAGEN.indexOf(rank) >= 0) ansage = ansage ? Math.min(ansage, rank) : rank;
     bestenPlatzMerken(rank); bestenPlatzZeigen();
+  }
+  // Mehrere Plätze in einem Bild: nur der beste wird angesagt
+  if(rekord || ansage){
+    if(rekord) showToast('Neuer Rekord.', 'Ab hier ist alles deins.');
+    else showToast('Platz ' + ansage, '');
     flash('#c2e67e', 0.3); shake(0.35, 0.4); sfxLevelUp();
   }
   const lbl = el('nextlabel'), bar = el('nextbar');
@@ -4460,14 +4469,15 @@ function vorbeifahrt(c){
   const rel = S.speed * turboSpeedMult() + (c.dir > 0 ? c.v : -c.v);
   if(rel < 3) return;
   const k = Math.min(1, rel / 32) * Math.min(1, 1.15 - luft / 2.4);
-  S.kamStoss = (S.kamStoss || 0) - Math.sign(c.g.position.x - S.x) * 0.32 * k;
-  S.windStoss = Math.max(S.windStoss || 0, 0.6 * k);
-  S.fovStoss = (S.fovStoss || 0) + 3.5 * k;
-  shake(0.06 + 0.16 * k, 0.2);
+  // 18.11.2026 etwa 40 % zurückgenommen (Paul: „Effekt beim Überholen etwas reduzieren")
+  S.kamStoss = (S.kamStoss || 0) - Math.sign(c.g.position.x - S.x) * 0.19 * k;
+  S.windStoss = Math.max(S.windStoss || 0, 0.36 * k);
+  S.fovStoss = (S.fovStoss || 0) + 2.0 * k;
+  shake(0.035 + 0.09 * k, 0.18);
   // Hörbar vorbei: Rausch-Sweep auf der Seite des Autos, knapp und Gegenverkehr lauter
   const seite = Math.sign(c.g.position.x - S.x);
-  sfxVorbei(seite * 0.8, 0.5 + 0.7 * k);
-  if(k > 0.55) sfxMotor(seite * 0.8, 0.35 + 0.5 * k);
+  sfxVorbei(seite * 0.8, 0.35 + 0.5 * k);
+  if(k > 0.65) sfxMotor(seite * 0.8, 0.25 + 0.4 * k);
   S.ueberholt = (S.ueberholt || 0) + 1;
   if(luft < 0.7){
     const gegen = c.dir > 0, m = gegen ? 20 : 10;
@@ -10576,8 +10586,12 @@ function update(dt){
   // Bremsen schiebt sie nach vorn. Überhol-Stöße schubsen sie seitlich.
   S.kamZug = (S.kamZug || 0) + (Math.max(-1.2, Math.min(1.0, (S.beschl || 0) * 0.09)) - (S.kamZug || 0)) * Math.min(1, dt * 4);
   S.kamStoss = (S.kamStoss || 0) * Math.pow(0.02, dt);
-  const camY = 2.35 + hoch * 1.0 - kt * 0.42 + S.y * 0.8;       // tiefer bei Tempo: der Boden rauscht dichter vorbei
-  const zitter = S.grounded && S.mode === 'play' ? kt * kt * 0.034 : 0;
+  // 18.11.2026 (Paul: „Perspektive etwas weiter von oben"): 2,35 → 3,5 m, Abstand bleibt 5,0 m.
+  const camY = 3.5 + hoch * 1.0 - kt * 0.32 + S.y * 0.8;        // tiefer bei Tempo: der Boden rauscht dichter vorbei
+  // In der Pause steht das Bild still: Zittern und Wackler würfeln sonst jedes Bild
+  // neu, obwohl die Zeit steht (der Wackler-Countdown läuft mit dt = 0 nie ab).
+  const pauseRuhig = typeof pausiert !== 'undefined' && pausiert;
+  const zitter = S.grounded && S.mode === 'play' && !pauseRuhig ? kt * kt * 0.034 : 0;
   // window.__nah = true rückt die Kamera zum Prüfen von Rider und Rad heran
   if(window.__nah){
     camera.position.set(S.x + 1.9, 1.35, S.z + 3.4);
@@ -10586,8 +10600,8 @@ function update(dt){
     camera.position.set(S.x * 0.65 + S.kamStoss + (Math.random() - 0.5) * zitter, camY + (Math.random() - 0.5) * zitter,
                         S.z + 5.0 + hoch * 1.6 - kt * 0.8 + S.kamZug);
   }
-  camera.lookAt(S.x * 0.9, S.y + 1.05 - kt * 0.12 - hoch * 0.3, S.z - 8 - hoch * 4);
-  if(shakeT > 0){ // Screen-Shake
+  camera.lookAt(S.x * 0.9, S.y + 0.85 - kt * 0.12 - hoch * 0.3, S.z - 9 - hoch * 4);
+  if(shakeT > 0 && !pauseRuhig){ // Screen-Shake
     shakeT -= dt;
     const k = Math.max(0, shakeT / shakeDur) * shakeMag;
     camera.position.x += (Math.random()-0.5) * k;
