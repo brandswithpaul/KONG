@@ -353,8 +353,7 @@
   #menu .btn.zurueck{background:none;color:var(--lime);border:2px solid rgba(194,230,126,.45);
     box-shadow:none;font-size:12px;letter-spacing:.16em;padding:.55em 1em;margin-top:2px}
 
-  #menu .wordmark{display:block;width:min(780px,70vw);height:auto;margin:0 auto;
-    filter:drop-shadow(0 14px 26px rgba(8,20,16,.75))}
+  #menu .wordmark{display:block;width:min(780px,70vw);height:auto;margin:0 auto}   /* ohne Schlagschatten (Paul, 18.11.2026) */
   /* RUNNER traegt breiter als das Logo: groesse Stufe plus weite Sperrung.
      Der gruene Schein kommt aus zwei weichen Schatten, nicht aus einem Filter —
      so bleibt die dunkle Kontur scharf. */
@@ -917,6 +916,66 @@
     #cBL{bottom:calc(64px + env(safe-area-inset-bottom));left:calc(max(18px,env(safe-area-inset-left)) + 140px)}
     #stickBasis{bottom:calc(40px + env(safe-area-inset-bottom))}
   }
+
+  /* ---- Handy-HUD v3 (Paul, 19.11.2026) ----
+     Oben mittig die Meter ohne Kasten, oben links ein kleiner Rundtacho, oben rechts
+     Leben + Turbo in einem Kasten. Unten Stick und Sprung spiegelgleich: gleiche
+     Größe, gleicher Abstand zum Rand und zum Boden. */
+  @media (pointer:coarse) and (max-width:820px), (pointer:coarse) and (max-height:500px){
+    #cTL{left:50%;right:auto;transform:translateX(-50%);top:calc(6px + env(safe-area-inset-top));
+      background:none;border:0;box-shadow:none;backdrop-filter:none;padding:0;max-width:none;
+      text-align:center;display:flex;flex-direction:column;align-items:center}
+    #cTL .hudline.big{justify-content:center;font-size:clamp(38px,11vw,54px);padding:0;
+      text-shadow:0 2px 0 rgba(11,16,10,.55), 0 3px 16px rgba(0,0,0,.65)}
+    #rekordZeile{margin-top:0;font-size:9.5px;letter-spacing:.05em;text-shadow:0 1px 6px rgba(0,0,0,.85)}
+    /* kleiner Rundtacho oben links */
+    #cBL{top:calc(8px + env(safe-area-inset-top));bottom:auto;left:max(8px,env(safe-area-inset-left));
+      padding:0;background:none;border:0;box-shadow:none}
+    #tacho{position:relative;width:82px;height:82px;border-radius:50%;
+      background:radial-gradient(circle, rgba(22,33,20,.78) 0 58%, rgba(22,33,20,.5) 70%, rgba(22,33,20,0) 72%)}
+    #tacho svg{display:block}
+    .tachoBahn{stroke-width:13}
+    .tachoWert{stroke-width:12}
+    #speedbig{position:absolute;left:0;right:0;top:50%;transform:translateY(-46%);text-align:center;
+      font-size:25px;text-shadow:0 2px 8px rgba(0,0,0,.7)}
+    #speedbig small{display:block;font-size:8px;margin:2px 0 0;letter-spacing:.14em}
+    /* oben rechts: Brokkoli-Leben, darunter der Turbo */
+    #cTR{min-width:0;width:92px;padding:6px 9px 7px;align-items:stretch;gap:5px}
+    #lives{justify-content:flex-end}
+    #cTR #turboSaeule{width:100%;gap:3px;flex-direction:column}
+    #cTR #turbowrap{width:100%;height:9px;border-width:1.5px;box-shadow:none}
+    #cTR #turbolabel{font-size:8px;letter-spacing:.18em;text-align:right;white-space:nowrap;opacity:.8}
+    #cBR{display:none}
+    /* Stick und Sprung: beide 116 px, 20 px vom Rand, gleiche Höhe */
+    #stickBasis{width:116px;height:116px;left:calc(max(20px,env(safe-area-inset-left)) + 58px);
+      bottom:calc(46px + env(safe-area-inset-bottom))}
+    #tasten{position:fixed;right:max(20px,env(safe-area-inset-right));bottom:calc(46px + env(safe-area-inset-bottom))}
+    /* Hinweise über den Daumen, nicht darunter */
+    #hint{bottom:calc(190px + env(safe-area-inset-bottom));font-size:13px;text-shadow:0 1px 8px rgba(0,0,0,.85)}
+    #tutBox{top:calc(104px + env(safe-area-inset-top))}
+  }
+  /* Sprungknopf im Stil des Sticks — gilt auf jedem Touch-Gerät (auch Tablet) */
+  #touchui #jumpBtn{position:relative;width:116px;height:116px;padding:0;border-radius:50%;
+    border:3px solid rgba(194,230,126,.7);background:rgba(12,26,20,.42);backdrop-filter:blur(3px);
+    box-shadow:0 0 26px rgba(194,230,126,.32), inset 0 0 22px rgba(12,26,20,.5);
+    display:flex;align-items:center;justify-content:center;color:#16281f;
+    transition:transform .08s ease-out, box-shadow .08s}
+  #touchui #jumpBtn .sprungKern{width:78px;height:78px;border-radius:50%;
+    background:radial-gradient(circle at 50% 35%, #e2f7b4, var(--lime) 55%, #9fcb5a);
+    border:3px solid #16281f;box-shadow:0 0 22px rgba(194,230,126,.65), inset 0 -4px 0 rgba(22,40,31,.18);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+  #touchui #jumpBtn svg{width:30px;height:30px;fill:none;stroke:#16281f;stroke-width:3;
+    stroke-linecap:round;stroke-linejoin:round}
+  #touchui #jumpBtn .sprungText{font-family:var(--klein);font-weight:800;font-size:9.5px;letter-spacing:.16em}
+  #touchui #jumpBtn:active{transform:scale(.93);background:rgba(12,26,20,.42);filter:none;
+    box-shadow:0 0 40px rgba(194,230,126,.75), inset 0 0 22px rgba(12,26,20,.5);border-color:var(--lime)}
+  #touchui #jumpBtn:active .sprungKern{background:radial-gradient(circle at 50% 35%, #f2ffd6, #d4f59a 60%, var(--lime))}
+  @media (pointer:coarse) and (max-height:500px){
+    #stickBasis{bottom:calc(30px + env(safe-area-inset-bottom))}
+    #tasten{bottom:calc(30px + env(safe-area-inset-bottom))}
+    #hint{bottom:calc(150px + env(safe-area-inset-bottom))}
+    #tutBox{top:calc(70px + env(safe-area-inset-top))}
+  }
   /* Flaches Fenster (Handy quer, kleines Vorschaufenster): alles enger ziehen,
      damit Eingabefeld und Startknopf im Bild bleiben. */
   @media (max-height:560px){
@@ -1009,6 +1068,19 @@
   /* Pause */
   #pauseBox .pauseTitel{color:var(--tinte);-webkit-text-stroke:0;text-shadow:3px 3px 0 var(--lime)}
   #pauseBox .pauseText{color:var(--tinte2);opacity:1}
+
+  /* ---- Hintergrund = Hero-Verlauf der Startseite getkong.de (18.11.2026) ----
+     Statt Straßenfoto mit dunklem Schleier: derselbe Verlauf wie im Hero von
+     getkong.de (dingdonggetkong, index.tsx). Gilt für Menü, Ergebniskarte und
+     Bestenliste, damit die drei Schirme zusammenpassen. */
+  #menu, #over, #board{background:#508465 linear-gradient(to bottom, #508465 0%, #76ab8a 18%,
+    #a9ceb2 40%, #d4dfc2 65%, #ece8d3 85%, #fffbef 100%) no-repeat}
+  #menuscrim{display:none}
+  #over::before{display:none}
+  /* Fußzeile stand cremefarben auf dem Foto — auf dem hellen Verlaufsende jetzt Tinte */
+  #menu .legal{color:#1f2e1c;opacity:.55}
+  #menu .legal a{color:#1f2e1c}
+  #menu .legal a:hover{color:#3e6b36}
 </style>
 </head>
 <body>
@@ -1098,7 +1170,7 @@
     <div id="stickBasis"><div id="stickPfeile"><span style="top:-30px;left:50%;transform:translateX(-50%)">GAS</span><span style="bottom:-30px;left:50%;transform:translateX(-50%)">BREMS</span></div><div id="stickKnopf"></div></div>
   </div>
   <div id="tasten">
-    <button id="jumpBtn">Sprung</button>
+    <button id="jumpBtn" aria-label="Sprung"><span class="sprungKern"><svg viewBox="0 0 24 24"><path d="M6 13l6-6 6 6"/><path d="M6 19l6-6 6 6" opacity=".55"/></svg><span class="sprungText">SPRUNG</span></span></button>
   </div>
 </div>
 
@@ -1443,6 +1515,14 @@ const camera = new THREE.PerspectiveCamera(64, innerWidth/innerHeight, 0.6, 400)
 // vorher 2 Mio. Dreiecke / 790 Draw-Calls bei Pixeldichte 2.
 // gleiche Bedingung wie das kompakte Handy-HUD im CSS (Turbo-Balken liegt dort quer)
 var HANDY_HUD = matchMedia('(pointer:coarse) and (max-width:820px), (pointer:coarse) and (max-height:500px)');
+// Handy: der Turbo steht oben rechts unter den Leben (Paul), am Desktop als Säule unten rechts
+function turboPlatz(){
+  const t = document.getElementById('turboSaeule'); if(!t) return;
+  const ziel = document.getElementById(HANDY_HUD.matches ? 'cTR' : 'cBR');
+  if(ziel && t.parentNode !== ziel) ziel.appendChild(t);
+}
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', turboPlatz); else turboPlatz();
+try{ HANDY_HUD.addEventListener('change', turboPlatz); }catch(e){}
 var MOBIL = (function(){
   const q = new URLSearchParams(location.search).get('mobil');
   if(q !== null) return q !== '0';
@@ -4524,6 +4604,32 @@ function ueberraschungen(dt){
   const arten = [ausparken, vollbremsung, schlenker, fussgaengerSprint];
   for(let versuch = 0; versuch < 4; versuch++) if(arten[(Math.random() * arten.length) | 0]()) return;
 }
+// Wer lange auf der Mittellinie fährt, bekommt Verkehr genau dorthin: ein
+// Entgegenkommender oder ein Vorausfahrender zieht (blinkend) an die Linie.
+// Ausweg bleibt immer: in die eigene Spur, weg von der Mitte.
+// Engste Spurmitte an der Linie: breitestes Modell halb 1,03 m → zwei Entgegenkommende
+// an der Linie haben noch 0,1 m Luft, und die Fahrbahnmitte liegt in der Trefferzone.
+const MITTE_MIN = 1.08;
+function mitteWaechter(dt){
+  if(S.mode !== 'play' || demo || S.leap){ S.mitteT = 0; return; }
+  const inMitte = Math.abs(S.x) < 0.9 && S.speed > 4;
+  S.mitteT = inMitte ? (S.mitteT || 0) + dt : Math.max(0, (S.mitteT || 0) - dt * 2);
+  S.mitteSperre = Math.max(0, (S.mitteSperre || 0) - dt);
+  if(S.mitteT < 1.8 - 0.8 * (1 - anfangsRuhe()) || S.mitteSperre > 0) return;
+  S.mitteSperre = 2.2 + Math.random() * 1.6 * anfangsRuhe();
+  const vF = S.speed * turboSpeedMult();
+  // bevorzugt Gegenverkehr (der kommt schnell und frontal), sonst einer vor dir
+  const kandidaten = cars.filter(function(c){
+    if(c.ausparken || c.schlenker || c.half.x >= 1.1) return false;
+    const vor = S.z - c.g.position.z;
+    if((c.dir || -1) > 0) return vor > Math.max(70, vF * 2.6) && vor < 260 && Math.abs(c.lane) > 1.3;
+    return vor > Math.max(35, vF * 1.6) && vor < 140 && Math.abs(c.lane) > 1.3;
+  });
+  kandidaten.sort(function(a, b){ return (b.dir || -1) - (a.dir || -1); });
+  const c = kandidaten[0];
+  if(c){ c.lane = Math.sign(c.lane) * MITTE_MIN; if(c.wob) c.wob.a = 0.08; return; }
+  spawnCar(undefined, true);
+}
 function ausparken(){
   const vF = S.speed * turboSpeedMult();
   const vonZ = S.z - Math.max(30, vF * 1.6), bisZ = S.z - Math.max(70, vF * 3.2);
@@ -6861,7 +6967,7 @@ function makeCar(){
   g.userData.van = van;
   return g;
 }
-function spawnCar(zOff){
+function spawnCar(zOff, mitteErzwingen){
   // Streuung: keine dauerhaft sichere Linie am Fahrbahnrand
   // Drei Spuren mit 3,3 m Abstand: bei 2,3 m Fahrzeugbreite bleibt rund 1 m Lücke,
   // durch die man mit Können durchziehen kann. Die Streuung entscheidet, ob sie
@@ -6896,6 +7002,16 @@ function spawnCar(zOff){
       // dort per Definition nie jemand ist. Die Häufigkeit wächst mit der
       // Distanz: bei 0 m jedes zwanzigste Auto, ab 3.000 m jedes fünfte.
       lane = kandidat + (Math.random()*0.3 - 0.15);
+      // Mittellinien-Fahrer: Zwischen den Spuren lag ein Streifen von ~1 m, den
+      // nie ein Auto berührte — dort fuhr man ungestört an allem vorbei (Paul:
+      // "man kann zu einfach in der Mitte fahren"). Ein Teil der Autos fährt jetzt
+      // dicht an der Linie (Spurmitte 1,08–1,28 statt 1,7) und deckt die Mitte ab.
+      // Am Anfang 20 %, bis 1.200 m 45 %. Busse nicht (zwei breite Busse
+      // nebeneinander würden sich berühren).
+      const mittelAnteil = 0.2 + 0.25 * (1 - anfangsRuhe());
+      if(half.x < 1.1 && (mitteErzwingen || Math.random() < mittelAnteil)){
+        lane = Math.sign(kandidat) * (MITTE_MIN + Math.random() * 0.2);
+      }
       break;
     }
   }
@@ -6913,7 +7029,9 @@ function spawnCar(zOff){
   g.position.set(lane, 0, dir < 0 ? zNeu : zNeu - 80);   // Gegenverkehr taucht weiter vorn auf (Schließgeschwindigkeit!)
   if(dir > 0) g.rotation.y = Math.PI;                // Gegenverkehr schaut uns an
   scene.add(g);
-  cars.push({g, speed, v: speed, lane, dir, half, roof: g.userData.roof || (istVan ? 1.95 : 1.5)});
+  // Pendeln in der Spur: niemand fährt auf dem Lineal, Lücken bleiben nicht stehen
+  const wob = {a: 0.1 + Math.random() * 0.15, f: 0.3 + Math.random() * 0.4, ph: Math.random() * 6.28};
+  cars.push({g, speed, v: speed, lane, dir, half, wob, roof: g.userData.roof || (istVan ? 1.95 : 1.5)});
 }
 function makePed(ohneSzene, art){
   if(mpBereit()){
@@ -8459,7 +8577,7 @@ function crashEinblenden(fertig){
 
 // ---------- Game flow ----------
 function resetGame(){
-  demo = null;
+  demoAbbrechen();
   S.x = 0; S.y = 0; S.z = 0; S.vy = 0; S.grounded = true;
   if(schweif) schweif.spur.length = 0;      // Schweif nicht über den Neustart ziehen
   S.speed = CFG.startSpeed; S.targetSpeed = CFG.startSpeed;
@@ -8526,15 +8644,19 @@ const DEMO = [
   [0.8,  {taste:'ArrowRight', dauer:0.7}],
   [1.6,  {taste:'ArrowLeft',  dauer:0.35}],
   [2.3,  {titel:'Springen',     text:'Über Autos hinweg',       tipp:true}],
-  [3.4,  {titel:'Doppelsprung', text:'In der Luft nochmal — 360', tipp:true}],
+  [3.4,  {titel:'Doppelsprung', text:'In der Luft nochmal — 360', tipp:true, boden:true}],
   [3.62, {tipp:true}],
   [4.6,  {titel:'Lieferzone',   text:'Rechts auf den grünen Streifen', zone:true}],
   // Ab hier lenkt die Demo selbst zur Zone und liefert, sobald sie drauf ist
 ];
 var demo = null;
 function demoStart(){
-  demo = { t: 0, i: 0, aktiv: [], zielX: null, geliefert: false, ende: false };
+  demo = { t: 0, i: 0, versatz: 0, aktiv: [], zielX: null, geliefert: false, ende: false };
+  // Leere Straße für die Demo: der Verkehr kommt erst nach der Übergabe
+  // (S.vorfuellen bleibt gesetzt und greift, sobald demo weg und der Sprung vorbei ist).
   for(const c of cars) scene.remove(c.g); cars.length = 0; abbiegerLeeren();
+  for(const p of peds) scene.remove(p.g); peds.length = 0;
+  S.vorfuellen = true;
   // Lieferzone in Reichweite legen, damit die Demo sie sicher erreicht
   S.nextCurbZ = S.z - 70;
   const box = el('tutBox'); if(box){ box.hidden = false; box.classList.remove('gut'); }
@@ -8546,8 +8668,19 @@ function demoZeige(titel, text){
   el('tutTitel').textContent = titel; el('tutText').textContent = text;
   el('tutTasten').innerHTML = '';
 }
-function demoEnde(){
+function demoTastenLos(){
   for(const k of ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown']) keys[k] = false;
+}
+// Abbruch von außen (Neustart, Schichtende): Tasten loslassen, Box weg.
+// Vorher setzte resetGame nur demo = null — die Box blieb mit dem letzten
+// Titel ("Doppelsprung") stehen und die gedrückten Pfeile lenkten weiter.
+function demoAbbrechen(){
+  if(demo) demoTastenLos();
+  demo = null;
+  const box = el('tutBox'); if(box){ box.hidden = true; box.classList.remove('gut'); }
+}
+function demoEnde(){
+  demoTastenLos();
   demo = null;
   const box = el('tutBox');
   if(box){ box.classList.add('gut'); demoZeige('Du bist dran!', 'Jeder Meter zählt'); }
@@ -8559,13 +8692,19 @@ function demoUpdate(dt){
   const d = demo; if(!d) return;
   d.t += dt;
   // Ruhe auf der Strecke
-  S.pedTimer = 4; nextSiteZ = S.z - 900; nextKuebelZ = S.z - 900;   // Verkehr läuft auch in der Einführung (Paul: früher Autos)
+  // Ruhe während der Demo: kein Verkehr, keine Querer — die Demo lenkt bis in die
+  // Gegenspur und fuhr sonst in Autos. Der Verkehr füllt sich direkt nach der Übergabe.
+  S.carTimer = 4; S.pedTimer = 4; nextSiteZ = S.z - 900; nextKuebelZ = S.z - 900;
   S.lives = Math.max(S.lives, 3);
   S.targetSpeed = Math.min(S.targetSpeed, 13);       // gemächlich, damit man es sieht (Tacho 25 km/h)
 
   // Skript abarbeiten
-  while(d.i < DEMO.length && DEMO[d.i][0] <= d.t){
-    const a = DEMO[d.i][1]; d.i++;
+  while(d.i < DEMO.length && DEMO[d.i][0] + d.versatz <= d.t){
+    const a = DEMO[d.i][1];
+    // Doppelsprung braucht festen Boden für den ersten Sprung — sonst wird der
+    // erste Tipp schon der 360 und der zweite verpufft. Warten verschiebt den Rest.
+    if(a.boden && !S.grounded){ d.versatz += dt; break; }
+    d.i++;
     if(a.titel) demoZeige(a.titel, a.text || '');
     if(a.taste){ keys[a.taste] = true; d.aktiv.push({k:a.taste, bis:d.t + a.dauer}); }
     if(a.tipp) jumpPressed();
@@ -8586,8 +8725,17 @@ function demoUpdate(dt){
       el('tutBox').classList.add('gut'); demoZeige('Lieferung!', 'Das bringt die dicksten Punkte');
     }
   }
-  // Sicherheitsnetz: falls die Zone nicht kommt, nach 9 s trotzdem übergeben
-  if((d.endeAb && d.t >= d.endeAb) || d.t > 9) demoEnde();
+  // Nach dem Mega-Sprung zurück in die eigene Spur. Vorher wurde mitten im Sprung
+  // übergeben: der Fahrer landete auf dem Bordsteinstreifen vor parkenden Autos
+  // und crashte, bevor man überhaupt reagieren konnte.
+  const spurX = CFG.roadHalf * 0.5;
+  if(d.geliefert && !S.leap && !S.pendingLeap && S.grounded){
+    const dx = spurX - S.x;
+    keys['ArrowRight'] = dx > 0.25; keys['ArrowLeft'] = dx < -0.25;
+  }
+  const inSpur = d.geliefert && !S.leap && !S.pendingLeap && S.grounded && Math.abs(S.x - spurX) < 0.5;
+  // Sicherheitsnetz: falls die Zone nicht kommt, nach 12 s trotzdem übergeben
+  if((d.endeAb && d.t >= d.endeAb && inSpur) || d.t > 12) demoEnde();
 }
 
 function tutStart(){
@@ -8849,6 +8997,7 @@ function rumble(dauer, stark, schwach){
   }catch(e){}
 }
 function gameOver(){
+  if(demo) return;                  // die Demo kostet nie ein Leben
   // Ein Crash beendet den Versuch. Kein Weiterfahren vom Punktestand —
   // der nächste Versuch beginnt bei null. Am Ende zählt der beste der drei.
   S.lives--;
@@ -8949,6 +9098,7 @@ function ovNameUebernehmen(){
 function schichtEnde(){
   S.mode = 'over';
   S.tut = null;
+  demoAbbrechen();
   const tb = el('tutBox'); if(tb) tb.hidden = true;
   versuchAblegen();
   // Der Bestwert kommt aus der Liste, nicht aus einem mitlaufenden Maximum:
@@ -9321,7 +9471,7 @@ function updateTurbo(dt){
   if(HANDY_HUD.matches){ el('turbobar').style.width = turboFuell; el('turbobar').style.height = '100%'; }
   else { el('turbobar').style.height = turboFuell; el('turbobar').style.width = '100%'; }
   if(S.turboActive){ lab.textContent = TURBO_NAMES[S.turboActive.tier]; wrap.classList.add('full'); }
-  else if(S.turbo >= 100){ lab.textContent = 'TURBO BEREIT · SHIFT'; wrap.classList.add('full'); }
+  else if(S.turbo >= 100){ lab.textContent = HANDY_HUD.matches ? 'TURBO BEREIT' : 'TURBO BEREIT · SHIFT'; wrap.classList.add('full'); }
   else { lab.textContent = 'Turbo'; wrap.classList.remove('full'); }
 }
 
@@ -10349,8 +10499,9 @@ function update(dt){
   if(checkSites()) return;
 
   ampelnSteuern(dt);
-  if(S.vorfuellen && carTemplates.length){ S.vorfuellen = false; for(let k = 0; k < 7; k++) spawnCar(40 + k * 38 + Math.random() * 14); }
+  if(S.vorfuellen && !demo && !S.leap && carTemplates.length){ S.vorfuellen = false; for(let k = 0; k < 7; k++) spawnCar(65 + k * 38 + Math.random() * 14); }   // 65 m: nach der Demo kommt man mit Lieferschub (110) an
   ueberraschungen(dt);
+  mitteWaechter(dt);
   // --- cars — Schwierigkeit zieht mit Level UND Distanz schnell an ---
   const diff = diffFactor();
   // Verkehrswellen: die Spawn-Rate pendelt statt gleichmäßig zu ticken.
@@ -10423,6 +10574,8 @@ function update(dt){
       li.blinkL.opacity = 0; li.blinkR.opacity = 0;
       if(c.ausparken){ const an = (performance.now() % 760) < 380 ? 1 : 0;
         (c.ausparken.seite > 0 ? li.blinkL : li.blinkR).opacity = an; }      // blinkt zur Fahrbahn hin
+      else if(c._blink){ const an = (performance.now() % 760) < 380 ? 1 : 0;
+        (c._blink > 0 ? li.blinkL : li.blinkR).opacity = an; }              // zieht zur Mittellinie
     }
   }
   for(let i=cars.length-1;i>=0;i--){
@@ -10438,8 +10591,26 @@ function update(dt){
     if(c.schlenker){                                   // Entgegenkommender zieht über die Mittellinie
       c.schlenker.t += dt;
       const k = Math.min(1, c.schlenker.t / c.schlenker.dauer);
-      c.g.position.x = c.lane + (c.schlenker.spitze - c.lane) * Math.sin(Math.PI * k);
+      let sx = c.lane + (c.schlenker.spitze - c.lane) * Math.sin(Math.PI * k);
+      // nicht in Autos der anderen Spur, die gerade daneben sind (die fahren jetzt
+      // teils dicht an der Linie)
+      for(const o of cars){
+        if(o === c || (o.dir || -1) === (c.dir || -1)) continue;
+        if(Math.abs(o.g.position.z - c.g.position.z) > o.half.z + c.half.z + 3) continue;
+        const sd = Math.sign(o.g.position.x - c.lane) || 1;
+        const grenze = o.g.position.x - sd * (o.half.x + c.half.x + 0.12);
+        if((sx - grenze) * sd > 0) sx = grenze;
+      }
+      c.g.position.x = sx;
       if(k >= 1){ c.g.position.x = c.lane; c.schlenker = null; }
+    }
+    c._blink = 0;
+    if(!c.ausparken && !c.schlenker){                  // Spur halten, leicht pendelnd; Spurversatz gleitet
+      let ziel = c.lane + (c.wob ? c.wob.a * Math.sin(performance.now() * 0.001 * c.wob.f + c.wob.ph) : 0);
+      if(Math.abs(ziel) < MITTE_MIN) ziel = Math.sign(c.lane || 1) * MITTE_MIN;   // nie über die Linie: Gegenverkehr passt vorbei
+      const dx = ziel - c.g.position.x;
+      c.g.position.x += dx * Math.min(1, dt * 1.4);
+      if(Math.abs(dx) > 0.15) c._blink = dx * dirC > 0 ? 1 : -1;
     }
     // harte Grenze: niemals ineinander, auch nicht nach einem Spawn knapp dahinter
     if(c._vorne && cars.indexOf(c._vorne) >= 0){
