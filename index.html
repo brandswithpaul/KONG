@@ -940,7 +940,7 @@
       font-size:25px;text-shadow:0 2px 8px rgba(0,0,0,.7)}
     #speedbig small{display:block;font-size:8px;margin:2px 0 0;letter-spacing:.14em}
     /* oben rechts: Brokkoli-Leben, darunter der Turbo */
-    #cTR{min-width:0;width:92px;padding:6px 9px 7px;align-items:stretch;gap:5px}
+
     #lives{justify-content:flex-end}
     #cTR #turboSaeule{width:100%;gap:3px;flex-direction:column}
     #cTR #turbowrap{width:100%;height:9px;border-width:1.5px;box-shadow:none}
@@ -954,26 +954,58 @@
     #hint{bottom:calc(190px + env(safe-area-inset-bottom));font-size:13px;text-shadow:0 1px 8px rgba(0,0,0,.85)}
     #tutBox{top:calc(104px + env(safe-area-inset-top))}
   }
-  /* Sprungknopf im Stil des Sticks — gilt auf jedem Touch-Gerät (auch Tablet) */
+  /* Stick und Sprung im Stil des Tachos (Paul): dunkle Scheibe, dunkle Bahn, Lime-Ring
+     mit Schein, helle Schrift. Gilt auf jedem Touch-Gerät (auch Tablet). */
+  #stickBasis, #touchui #jumpBtn{
+    background:radial-gradient(circle, rgba(22,33,20,.78) 0 60%, rgba(22,33,20,.55) 72%);
+    border:9px solid rgba(11,16,10,.55);box-shadow:0 6px 18px rgba(0,0,0,.35);backdrop-filter:blur(3px)}
+  #stickBasis::before, #touchui #jumpBtn::before{content:'';position:absolute;inset:-6px;border-radius:50%;
+    border:3.5px solid var(--lime);filter:drop-shadow(0 0 5px rgba(194,230,126,.6));opacity:.8;pointer-events:none}
+  #stickBasis{opacity:.82}
+  #stick.aktiv #stickBasis{opacity:1}
+  #stick.aktiv #stickBasis::before{opacity:1}
+  #stickKnopf{width:48px;height:48px;background:radial-gradient(circle at 50% 38%, #2f4a2a, #142016);
+    border:4px solid var(--lime);box-shadow:0 0 14px rgba(194,230,126,.55), 0 3px 8px rgba(0,0,0,.45)}
+  #stickPfeile{color:rgba(253,248,234,.72)}
+  #stickPfeile span{font-size:9px;letter-spacing:.16em}
   #touchui #jumpBtn{position:relative;width:116px;height:116px;padding:0;border-radius:50%;
-    border:3px solid rgba(194,230,126,.7);background:rgba(12,26,20,.42);backdrop-filter:blur(3px);
-    box-shadow:0 0 26px rgba(194,230,126,.32), inset 0 0 22px rgba(12,26,20,.5);
-    display:flex;align-items:center;justify-content:center;color:#16281f;
-    transition:transform .08s ease-out, box-shadow .08s}
-  #touchui #jumpBtn .sprungKern{width:78px;height:78px;border-radius:50%;
-    background:radial-gradient(circle at 50% 35%, #e2f7b4, var(--lime) 55%, #9fcb5a);
-    border:3px solid #16281f;box-shadow:0 0 22px rgba(194,230,126,.65), inset 0 -4px 0 rgba(22,40,31,.18);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
-  #touchui #jumpBtn svg{width:30px;height:30px;fill:none;stroke:#16281f;stroke-width:3;
-    stroke-linecap:round;stroke-linejoin:round}
-  #touchui #jumpBtn .sprungText{font-family:var(--klein);font-weight:800;font-size:9.5px;letter-spacing:.16em}
-  #touchui #jumpBtn:active{transform:scale(.93);background:rgba(12,26,20,.42);filter:none;
-    box-shadow:0 0 40px rgba(194,230,126,.75), inset 0 0 22px rgba(12,26,20,.5);border-color:var(--lime)}
-  #touchui #jumpBtn:active .sprungKern{background:radial-gradient(circle at 50% 35%, #f2ffd6, #d4f59a 60%, var(--lime))}
+    display:flex;align-items:center;justify-content:center;color:#fdf8ea;
+    transition:transform .08s ease-out}
+  #touchui #jumpBtn .sprungKern{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  #touchui #jumpBtn svg{width:34px;height:34px;fill:none;stroke:var(--lime);stroke-width:3;
+    stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px rgba(194,230,126,.6))}
+  #touchui #jumpBtn .sprungText{font-family:var(--klein);font-weight:700;font-size:9px;letter-spacing:.16em;opacity:.75}
+  #touchui #jumpBtn:active{transform:scale(.93);filter:none;color:#fdf8ea;
+    background:radial-gradient(circle, rgba(60,90,40,.85) 0 60%, rgba(22,33,20,.6) 72%)}
+  #touchui #jumpBtn:active::before{opacity:1;filter:drop-shadow(0 0 12px rgba(194,230,126,.95))}
+  #turboRund{display:none}
+  #turboRundWert.voll{animation:turbopulse .7s infinite alternate}
+  @media (pointer:coarse) and (max-width:820px), (pointer:coarse) and (max-height:500px){
+    /* Turbo-Ring oben rechts, Gegenstück zum Tacho; Leben in der Mitte */
+    #cTR{width:82px;height:82px;min-width:0;padding:0;border:0;border-radius:50%;box-shadow:none;
+      backdrop-filter:none;display:block;
+      background:radial-gradient(circle, rgba(22,33,20,.78) 0 58%, rgba(22,33,20,.5) 70%, rgba(22,33,20,0) 72%)}
+    #turboRund{display:block;position:absolute;inset:0}
+    #turboRund svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+    #turboRund .tachoBahn{stroke-width:13}
+    #turboRund .tachoWert{stroke-width:12}
+    #turboRundLabel{position:absolute;left:0;right:0;bottom:15px;text-align:center;font-family:var(--klein);
+      font-weight:600;font-size:8px;letter-spacing:.14em;color:#fdf8ea;opacity:.7}
+    #cTR #lives{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);margin:0;gap:3px;z-index:1}
+    #cTR #lives .lifeIcon{height:22px}
+    #cTR #lives .lebenZahl{font-size:22px}
+    /* Meldungen oben unter der Kopfzeile, kleiner — nicht mehr mitten im Bild */
+    #toast{top:calc(96px + env(safe-area-inset-top));bottom:auto}
+    #toast .pill{font-size:19px;padding:.26em .85em;
+      box-shadow:0 0 20px rgba(194,230,126,.45), 0 4px 14px rgba(0,0,0,.35)}
+    #toast .sub{margin-top:4px;font-size:9.5px;letter-spacing:.16em;text-shadow:0 1px 6px rgba(0,0,0,.85)}
+    #hint{top:calc(152px + env(safe-area-inset-top));bottom:auto;font-size:11px}
+  }
   @media (pointer:coarse) and (max-height:500px){
     #stickBasis{bottom:calc(30px + env(safe-area-inset-bottom))}
     #tasten{bottom:calc(30px + env(safe-area-inset-bottom))}
-    #hint{bottom:calc(150px + env(safe-area-inset-bottom))}
+    #hint{top:calc(118px + env(safe-area-inset-top));bottom:auto}
+    #toast{top:calc(72px + env(safe-area-inset-top))}
     #tutBox{top:calc(70px + env(safe-area-inset-top))}
   }
   /* Flaches Fenster (Handy quer, kleines Vorschaufenster): alles enger ziehen,
@@ -1130,6 +1162,11 @@
     <div id="lvl" hidden><span class="pill">LVL 1</span></div>
     <div id="xpwrap" hidden><div id="xpbar"></div></div>
     <div id="lives"></div>
+    <!-- Handy: Turbo als Ring wie der Tacho, die Leben stehen in der Mitte -->
+    <div id="turboRund"><svg viewBox="-9 -9 138 138">
+        <path class="tachoBahn" d="M18 96a56 56 0 1 1 84 0"/>
+        <path class="tachoWert" id="turboRundWert" d="M18 96a56 56 0 1 1 84 0"/>
+      </svg><div id="turboRundLabel">TURBO</div></div>
   </div>
   <div id="cBL">
     <div id="tacho">
@@ -1515,28 +1552,21 @@ const camera = new THREE.PerspectiveCamera(64, innerWidth/innerHeight, 0.6, 400)
 // vorher 2 Mio. Dreiecke / 790 Draw-Calls bei Pixeldichte 2.
 // gleiche Bedingung wie das kompakte Handy-HUD im CSS (Turbo-Balken liegt dort quer)
 var HANDY_HUD = matchMedia('(pointer:coarse) and (max-width:820px), (pointer:coarse) and (max-height:500px)');
-// Handy: der Turbo steht oben rechts unter den Leben (Paul), am Desktop als Säule unten rechts
-function turboPlatz(){
-  const t = document.getElementById('turboSaeule'); if(!t) return;
-  const ziel = document.getElementById(HANDY_HUD.matches ? 'cTR' : 'cBR');
-  if(ziel && t.parentNode !== ziel) ziel.appendChild(t);
-}
-if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', turboPlatz); else turboPlatz();
-try{ HANDY_HUD.addEventListener('change', turboPlatz); }catch(e){}
+
 var MOBIL = (function(){
   const q = new URLSearchParams(location.search).get('mobil');
   if(q !== null) return q !== '0';
   return matchMedia('(pointer:coarse)').matches && Math.min(screen.width, screen.height) < 900;
 })();
 const renderer = new THREE.WebGLRenderer({antialias: !MOBIL, powerPreference: 'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio, MOBIL ? 1.5 : 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));   // Handy jetzt auch bis 2 (vorher 1,5 → unscharf)
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 // VSM ausprobiert und wieder verworfen: es filtert die Karte zwar weich, mit
 // den Toon-Materialien verschwinden die Schatten dabei aber fast vollständig —
 // auch der Schatten unter dem Rad. PCFSoft bleibt, das Flimmern wird über
 // Auflösung und normalBias gelöst statt über den Filter.
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;   // auch Handy: einfaches PCF machte den Fahrerschatten pixelig
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = REALISMUS ? THREE.ACESFilmicToneMapping : THREE.LinearToneMapping;
 renderer.toneMappingExposure = REALISMUS ? 1.0 : 0.9;   // mehr Licht (Paul, achte Runde; vorher 0.86)
@@ -1752,7 +1782,8 @@ try{
       uFern:    { value: 400.0 },
       uAmount:  { value: 1.0 },
       uSeed:    { value: 0.0 },
-      uTempo:   { value: 0.0 }
+      uTempo:   { value: 0.0 },
+      uTexel:   { value: new THREE.Vector2(1/1024, 1/1024) }
     },
     vertexShader: [
       'varying vec2 vUv;',
@@ -1765,25 +1796,59 @@ try{
       'uniform float uAmount;',
       'uniform float uSeed;',
       'uniform float uTempo;',
+      'uniform vec2 uTexel;',
       'varying vec2 vUv;',
+      // Kantenglättung (FXAA-lite) fürs Handy: der Composer rendert ohne MSAA,
+      // am Desktop gleicht die doppelte Pixeldichte das aus, auf dem Handy nicht.
+      '#ifdef GK_MOBIL',
+      'vec3 fxaa(vec2 uv){',
+      '  vec3 L = vec3(0.299, 0.587, 0.114);',
+      '  vec3 nw = texture2D(tDiffuse, uv + vec2(-1.0,-1.0) * uTexel).rgb, ne = texture2D(tDiffuse, uv + vec2(1.0,-1.0) * uTexel).rgb;',
+      '  vec3 sw = texture2D(tDiffuse, uv + vec2(-1.0, 1.0) * uTexel).rgb, se = texture2D(tDiffuse, uv + vec2(1.0, 1.0) * uTexel).rgb;',
+      '  vec3 m = texture2D(tDiffuse, uv).rgb;',
+      '  float lnw = dot(nw, L), lne = dot(ne, L), lsw = dot(sw, L), lse = dot(se, L), lm = dot(m, L);',
+      '  float lmin = min(lm, min(min(lnw, lne), min(lsw, lse))), lmax = max(lm, max(max(lnw, lne), max(lsw, lse)));',
+      '  if(lmax - lmin < max(0.04, lmax * 0.125)) return m;',
+      '  vec2 dir = vec2(-((lnw + lne) - (lsw + lse)), (lnw + lsw) - (lne + lse));',
+      '  float red = max((lnw + lne + lsw + lse) * 0.03125, 0.0078125);',
+      '  float rcp = 1.0 / (min(abs(dir.x), abs(dir.y)) + red);',
+      '  dir = clamp(dir * rcp, -8.0, 8.0) * uTexel;',
+      '  vec3 a = 0.5 * (texture2D(tDiffuse, uv + dir * (1.0/3.0 - 0.5)).rgb + texture2D(tDiffuse, uv + dir * (2.0/3.0 - 0.5)).rgb);',
+      '  vec3 b = a * 0.5 + 0.25 * (texture2D(tDiffuse, uv - dir * 0.5).rgb + texture2D(tDiffuse, uv + dir * 0.5).rgb);',
+      '  float lb = dot(b, L);',
+      '  return (lb < lmin || lb > lmax) ? a : b;',
+      '}',
+      '#endif',
       'void main(){',
+      '#ifdef GK_MOBIL',
+      '  vec4 c = vec4(fxaa(vUv), 1.0);',
+      '#else',
       '  vec4 c = texture2D(tDiffuse, vUv);',
+      '#endif',
       // Tempo-Unschärfe: zum Rand hin strahlenförmig verwischt, die Mitte bleibt
       // scharf. Bei Spitze getreten ein Hauch, im Turbo deutlich.
       '  if(uTempo > 0.001){',
       '    vec2 d = vUv - vec2(0.5, 0.47);',
       '    float k = uTempo * 0.05 * smoothstep(0.16, 0.66, length(d));',
       '    vec3 acc = c.rgb;',
+      '#ifdef GK_MOBIL',
+      '    for(int i = 1; i <= 3; i++) acc += texture2D(tDiffuse, vUv - d * k * float(i) / 3.0).rgb;',
+      '    c.rgb = acc / 4.0;',
+      '#else',
       '    for(int i = 1; i <= 6; i++) acc += texture2D(tDiffuse, vUv - d * k * float(i) / 6.0).rgb;',
       '    c.rgb = acc / 7.0;',
+      '#endif',
       '  }',
       // Verträumtes Leuchten (Halation): helle Stellen bluten weich und warm aus —
       // 8 Proben im Kreis, nur was über 0,62 liegt. Wirkt wie altes Filmmaterial.
+      // Handy: entfällt (16 Proben je Pixel für einen Hauch Leuchten)
+      '#ifndef GK_MOBIL',
       '  vec3 glow = vec3(0.0);',
       '  for(int i = 0; i < 8; i++){ float w = float(i) * 0.785; vec2 o2 = vec2(cos(w), sin(w)) * vec2(0.0075, 0.012);',
       '    vec3 sm = texture2D(tDiffuse, vUv + o2).rgb + texture2D(tDiffuse, vUv + o2 * 2.2).rgb;',
       '    glow += max(sm - 1.7, 0.0); }',
-      '  c.rgb += glow * vec3(1.0, 0.86, 0.66) * 0.06;',   // nur wirklich Helles (Mittel > 0,85) blutet aus
+      '  c.rgb += glow * vec3(1.0, 0.86, 0.66) * 0.06;',
+      '#endif',   // nur wirklich Helles (Mittel > 0,85) blutet aus
       // Luftperspektive in Himmelsfarben: was weit weg ist, verschwimmt in den
       // Verlauf des CI-Himmels — oben Minze, unten Creme. Der Himmel selbst
       // (Tiefe 1) bleibt, wie er ist.
@@ -2277,7 +2342,14 @@ var baumModelle = [];
 // Straßenbäume: die Meshy-Laubbäume baum3 (volle Krone, ~10k Dreiecke) und baum4
 // (runde Krone). Die Blattkarten-Linden hhbaum1–3 waren licht, man sah durch die
 // Krone auf die dunkle Kernkugel (Paul, 01.11.2026).
-const BAUM_GLBS = ['assets/getkong-baum3.glb', 'assets/getkong-baum3.glb', 'assets/getkong-baum4.glb'];
+// Handy: leichte Varianten aus blender/handy_lod.py (Bäume ~3k statt 10–15k Dreiecke,
+// Autos ~7,5–8,5k statt 21–39k). Auf dem Handy waren es sonst 2,2 Mio. Dreiecke je Bild.
+const HANDY_LOD = ['getkong-broccoli2', 'getkong-hecke', 'getkong-baum3', 'getkong-baum4', 'getkong-mcar2', 'getkong-mcar3', 'getkong-mcar4', 'getkong-mcar5', 'getkong-mcar6'];
+function handyLOD(pfad){
+  if(!MOBIL) return pfad;
+  return HANDY_LOD.some(function(n){ return pfad.indexOf(n + '.glb') >= 0; }) ? pfad.replace('.glb', '-lo.glb') : pfad;
+}
+const BAUM_GLBS = ['assets/getkong-baum3.glb', 'assets/getkong-baum3.glb', 'assets/getkong-baum4.glb'].map(handyLOD);
 function baumAusModell(hoehe){
   if(!baumModelle.length) return null;
   const kopie = baumModelle[(Math.random() * baumModelle.length) | 0].clone();
@@ -5485,7 +5557,7 @@ function zufallsHaus(seite){
 // wird jede Instanz in die Länge gezogen: wenige lange Segmente statt vieler
 // kurzer. Als InstancedMesh kostet die ganze Reihe trotzdem einen Draw Call.
 var heckeGeo = null, heckeMat = null, heckeMasse = null;
-loadGLB(null, 'assets/getkong-hecke.glb', function(gltf){
+loadGLB(null, handyLOD('assets/getkong-hecke.glb'), function(gltf){
   const m = gltf.scene;
   const groesse = aufEinsNormieren(m);
   if(!groesse) return;
@@ -6249,7 +6321,7 @@ function kontaktSchatten(b, l, staerke){
  [null,'assets/getkong-mcar4.glb',true,4.40],    // Fastback rot
  [null,'assets/getkong-mcar5.glb',true,3.95],    // Cabrio pink
  [null,'assets/getkong-mcar6.glb',true,4.55]].forEach(function(pair){
-  loadGLB(pair[0], pair[1], function(gltf){
+  loadGLB(pair[0], handyLOD(pair[1]), function(gltf){
     const m = gltf.scene;
     normalizeModel(m, pair[3] || 4.1, pair[2]);
     const wrap = new THREE.Group(); wrap.add(m); wrap.userData.datei = pair[1];
@@ -6574,7 +6646,7 @@ if(false) new THREE.TextureLoader().load('assets/sprites/glowbro.png', function(
 
 var coinTemplate = null;
 // Neon-Brokkoli (flaches Relief, 0,24 m dick) — dreht sich wie eine Münze.
-loadGLB(null, 'assets/getkong-broccoli2.glb', function(gltf){
+loadGLB(null, handyLOD('assets/getkong-broccoli2.glb'), function(gltf){
   const m = gltf.scene;
   let box = new THREE.Box3().setFromObject(m);
   let size = box.getSize(new THREE.Vector3());
@@ -8542,7 +8614,19 @@ function renderLives(container, uebrig){
 function updateLivesHUD(){ renderLives(el('lives'), S.lives); }
 
 // Startsequenz: Name bestätigen, Leben zeigen, 3-2-1
+// Shader vorab übersetzen, solange der 3-2-1-Countdown läuft. Sonst übersetzt die
+// Grafikkarte jedes Material beim ersten Auftauchen — auf dem Handy ein spürbarer
+// Ruckler bei jedem neuen Autotyp, Effekt oder Haus.
+function vorkompilieren(){
+  try{
+    const versteckt = [];
+    scene.traverse(function(o){ if(o.isMesh && !o.visible){ o.visible = true; versteckt.push(o); } });
+    renderer.compile(scene, camera);
+    versteckt.forEach(function(o){ o.visible = false; });
+  }catch(e){}
+}
 function startSequenz(fertig){
+  vorkompilieren();
   const box = el('startseq');
   box.querySelector('.seqName').textContent = S.playerName;
   renderLives(el('seqLives'), CFG.lives);
@@ -9469,6 +9553,13 @@ function updateTurbo(dt){
   const wrap = el('turbowrap'), lab = el('turbolabel');
   const turboFuell = (S.turboActive ? (1 - S.turboActive.t/S.turboActive.dur)*100 : S.turbo) + '%';
   if(HANDY_HUD.matches){ el('turbobar').style.width = turboFuell; el('turbobar').style.height = '100%'; }
+  const ring = el('turboRundWert'), ringLab = el('turboRundLabel');
+  if(ring){
+    ring.style.strokeDasharray = (parseFloat(turboFuell) / 100 * 264).toFixed(1) + ' 999';
+    const voll = !!S.turboActive || S.turbo >= 100;
+    ring.classList.toggle('voll', voll);
+    ringLab.textContent = S.turboActive ? 'AKTIV' : (S.turbo >= 100 ? 'BEREIT' : 'TURBO');
+  }
   else { el('turbobar').style.height = turboFuell; el('turbobar').style.width = '100%'; }
   if(S.turboActive){ lab.textContent = TURBO_NAMES[S.turboActive.tier]; wrap.classList.add('full'); }
   else if(S.turbo >= 100){ lab.textContent = HANDY_HUD.matches ? 'TURBO BEREIT' : 'TURBO BEREIT · SHIFT'; wrap.classList.add('full'); }
@@ -9612,7 +9703,7 @@ function manageShots(dt){
 function showToast(main, sub){
   // Während der Einführung hat die Karte Vorrang. Die Toasts legten sich sonst
   // genau darüber und man las beides nicht.
-  if(S.tut) return;
+  if(S.tut || demo) return;          // in der Demo spricht die Demo-Karte
   ui.toast.querySelector('.pill').innerHTML = main;
   ui.toast.querySelector('.sub').textContent = sub;
   ui.toast.classList.remove('show'); void ui.toast.offsetWidth;
@@ -10204,7 +10295,7 @@ function update(dt){
   S.onCurb = !!(curb && S.x > CFG.curbXmin - 0.4 && !S.leap);
 
   // hint once
-  if(S.onCurb && !curb.used){
+  if(S.onCurb && !curb.used && !demo){
     ui.hint.style.opacity = 1;
   } else {
     ui.hint.style.opacity = 0;
@@ -10827,8 +10918,9 @@ function update(dt){
 // devicePixelRatio 2, also vierfacher Pixelzahl — auf schwächerer Hardware
 // stockt es damit. Statt fest zu deckeln (und überall unscharf zu sein) misst
 // diese Regelung die Bildzeit und geht nur dann runter, wenn es klemmt.
-const PR_STUFEN = MOBIL ? [1.5, 1.25, 1.0, 0.85] : [2, 1.6, 1.3, 1.0];
-var prIdx = 0, prZeiten = [], prLetzt = 0;
+// Handy: Untergrenze 1,25 statt 0,85 — darunter wurde das Bild matschig (Paul)
+const PR_STUFEN = MOBIL ? [2, 1.75, 1.5, 1.25] : [2, 1.6, 1.3, 1.0];
+var prIdx = 0, prZeiten = [], prLetzt = 0, schattenHalb = false, schattenTakt = 0;
 function aufloesungRegeln(){
   const jetzt = performance.now();
   if(prLetzt){
@@ -10837,12 +10929,18 @@ function aufloesungRegeln(){
       const sortiert = prZeiten.slice().sort(function(a, b){ return a - b; });
       const median = sortiert[45];
       prZeiten.length = 0;
-      const max = Math.min(devicePixelRatio, MOBIL ? 1.5 : 2);
-      // über 22 ms (unter 45 fps) eine Stufe runter, unter 11 ms wieder hoch
-      if(median > 22 && prIdx < PR_STUFEN.length - 1) prIdx++;
+      const max = Math.min(devicePixelRatio, 2);
+      // über 22 ms (unter 45 fps) eine Stufe runter, unter 11 ms wieder hoch.
+      // Handy: schon ab 19,5 ms (unter ~51 fps) — iOS deckelt bei 60, ein Wert
+      // unter 11 ms kommt dort nie, also nur abwärts. Unter der kleinsten Auflösung
+      // folgt eine Stufe mehr: Schatten nur noch jedes zweite Bild neu.
+      const stufenMax = PR_STUFEN.length - 1 + (MOBIL ? 1 : 0);
+      if(median > (MOBIL ? 19.5 : 22) && prIdx < stufenMax) prIdx++;
       else if(median < 11 && prIdx > 0) prIdx--;
       else { prLetzt = jetzt; return; }
-      const ziel = Math.min(max, PR_STUFEN[prIdx]);
+      schattenHalb = prIdx >= PR_STUFEN.length;
+      renderer.shadowMap.autoUpdate = !schattenHalb;
+      const ziel = Math.min(max, PR_STUFEN[Math.min(prIdx, PR_STUFEN.length - 1)]);
       if(Math.abs(renderer.getPixelRatio() - ziel) > 0.01){
         renderer.setPixelRatio(ziel);
         const puffer = renderer.getDrawingBufferSize(new THREE.Vector2());
@@ -10854,9 +10952,11 @@ function aufloesungRegeln(){
   }
   prLetzt = jetzt;
 }
+const texelPuffer = new THREE.Vector2();
 function loop(){
   requestAnimationFrame(loop);
   aufloesungRegeln();
+  if(schattenHalb) renderer.shadowMap.needsUpdate = (++schattenTakt & 1) === 0;
   let dt = Math.min(clock.getDelta(), 0.07);   // erst unter 14 fps Zeitlupe (vorher 20 fps)
   // Standbild-Moment: die Welt hält kurz an, das Bild läuft weiter
   if(hitPause > 0){ hitPause -= 0.016; dt = 0; }
@@ -10872,6 +10972,10 @@ function loop(){
   updateFunken(Math.min(clock.getDelta ? 0.05 : 0.016, 0.05));
   updateAmbience();
   if(gradePass) gradePass.uniforms.uSeed.value = (performance.now() % 10000) * 0.0001;
+  if(window.gradePass && gradePass.uniforms.uTexel){   // Pixelgröße für die Kantenglättung (Handy)
+    const pb = renderer.getDrawingBufferSize(texelPuffer);
+    gradePass.uniforms.uTexel.value.set(1 / pb.x, 1 / pb.y);
+  }
   if(composer && !window.__composerAus) composer.render();
   else renderer.render(scene, camera);
 }
